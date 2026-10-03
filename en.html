@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,7 +17,7 @@ button,select,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 svg{flex:none}
 
-/* ---------- Thanh điều hướng ---------- */
+/* ---------- Navigation bar ---------- */
 .nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:56px;padding:0 16px;background:var(--bg);border-bottom:1px solid #26272d}
 .brand{font-weight:700;letter-spacing:.5px;font-size:15px;display:flex;align-items:center;gap:8px}
 .brand b{color:var(--accent)}
@@ -41,7 +41,7 @@ svg{flex:none}
 .btn.danger{color:#ff8f9a;border-color:#5b3036;background:#2e2226}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 
-/* ---------- Khu bàn phím ---------- */
+/* ---------- Keyboard area ---------- */
 #stage{position:relative;background:radial-gradient(ellipse at 50% 30%,#2a2b32 0%,var(--bg) 70%);padding:22px 16px 18px;display:flex;flex-direction:column;align-items:center}
 .layerbar{display:flex;align-items:center;gap:6px;margin-bottom:16px;flex-wrap:wrap;justify-content:center}
 .layerbar .lbl{font-size:12px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-right:6px;text-transform:uppercase}
@@ -80,7 +80,7 @@ svg{flex:none}
 .progress{position:absolute;left:0;right:0;top:0;height:3px;display:none}
 .progress div{height:100%;background:var(--accent);width:0;transition:width .1s}
 
-/* ---------- Khu cấu hình phía dưới ---------- */
+/* ---------- Configuration area ---------- */
 #config{flex:1;display:grid;grid-template-columns:200px 1fr;background:var(--panel);border-top:1px solid var(--line);min-height:330px}
 .menu{background:var(--bg2);border-right:1px solid var(--line);padding:10px 0}
 .menu button{display:flex;align-items:center;gap:12px;width:100%;padding:12px 20px;background:none;border:none;border-left:3px solid transparent;color:var(--muted);font-weight:600;font-size:14px;text-align:left}
@@ -152,7 +152,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 <body>
 
 <nav class="nav">
-  <div class="brand"><b>AULA</b> F65 Configurator <a class="lang" id="langLink" href="#" title="English">EN</a></div>
+  <div class="brand"><b>AULA</b> F65 Configurator <a class="lang" id="langLink" href="#" title="Tiếng Việt">VI</a></div>
   <div class="navtabs" id="navtabs"></div>
   <div class="devchip" id="devchip"></div>
 </nav>
@@ -166,45 +166,45 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 </section>
 
 <section id="config"></section>
-<footer class="foot">Công cụ cộng đồng, không chính thức — không liên kết với AULA hay Epomaker. Mọi dữ liệu chỉ trao đổi giữa trình duyệt và bàn phím của bạn, không gửi đi đâu.</footer>
+<footer class="foot">Unofficial community tool — not affiliated with AULA or Epomaker. All data stays between your browser and your keyboard; nothing is sent anywhere.</footer>
 <div id="toast"></div>
 
 <script>
 'use strict';
 /* ====================================================================
-   Định nghĩa bàn phím (từ EPOMAKER_AULA_F65_V2.JSON)
+   Keyboard definition (from EPOMAKER_AULA_F65_V2.JSON)
    ==================================================================== */
 const DEFAULT_DEF = {
   name: "AULA F65", vendorId: "0x258A", productId: "0x010C",
   customKeycodes: [
-    {name:"USB MODE",title:"Chuyển sang chế độ có dây USB",shortName:"USB"},
-    {name:"2.4G MODE",title:"Chuyển sang chế độ không dây 2.4G",shortName:"2.4G"},
-    {name:"Bluetooth 1",title:"Bluetooth kênh 1",shortName:"BT1"},
-    {name:"Bluetooth 2",title:"Bluetooth kênh 2",shortName:"BT2"},
-    {name:"Bluetooth 3",title:"Bluetooth kênh 3",shortName:"BT3"},
-    {name:"Lock Win",title:"Khóa phím Windows",shortName:"Khóa\nWin"},
-    {name:"RGB Mode Cycle",title:"Đổi hiệu ứng đèn",shortName:"Hiệu\nứng"},
-    {name:"RGB Color Cycle",title:"Đổi màu đèn",shortName:"Màu\nđèn"},
-    {name:"Brigth Inc",title:"Tăng độ sáng đèn",shortName:"Sáng +"},
-    {name:"Brigth Dec",title:"Giảm độ sáng đèn",shortName:"Sáng −"},
-    {name:"Speed Inc",title:"Tăng tốc độ hiệu ứng",shortName:"Tốc +"},
-    {name:"Speed Dec",title:"Giảm tốc độ hiệu ứng",shortName:"Tốc −"},
-    {name:"Game Mode",title:"Chế độ chơi game",shortName:"Game"},
-    {name:"Game Mode Record",title:"Ghi đèn chế độ game",shortName:"REC"},
-    {name:"RGB OFF/ON",title:"Bật/tắt đèn",shortName:"Đèn\nbật/tắt"},
-    {name:"Keyboard Reset",title:"Khôi phục cài đặt gốc bàn phím (giữ 3 giây)",shortName:"Reset"},
-    {name:"EMI Test",title:"Kiểm tra EMI (dùng cho nhà sản xuất)",shortName:"EMI"},
-    {name:"Battery View",title:"Xem mức pin",shortName:"Pin"},
-    {name:"WIN MAC",title:"Chuyển đổi Win/Mac",shortName:"Win/\nMac"},
-    {name:"WIN",title:"Chế độ Windows",shortName:"Win\nmode"},
-    {name:"MAC",title:"Chế độ Mac",shortName:"Mac\nmode"},
-    {name:"NKRO Mode",title:"Bật/tắt N-key rollover",shortName:"NKRO"},
-    {name:"White Mode",title:"Chế độ đèn trắng",shortName:"Đèn\ntrắng"},
-    {name:"Swap ASDW",title:"Đổi WASD với phím mũi tên",shortName:"WASD\n⇄ ↑↓"},
-    {name:"Side Mode",title:"Hiệu ứng đèn cạnh",shortName:"Cạnh\nhiệu ứng"},
-    {name:"Side Color",title:"Màu đèn cạnh",shortName:"Cạnh\nmàu"},
-    {name:"Side Bright",title:"Độ sáng đèn cạnh",shortName:"Cạnh\nsáng"},
-    {name:"Side Speed",title:"Tốc độ đèn cạnh",shortName:"Cạnh\ntốc độ"}
+    {name:"USB MODE",title:"Switch to wired USB mode",shortName:"USB"},
+    {name:"2.4G MODE",title:"Switch to 2.4G wireless mode",shortName:"2.4G"},
+    {name:"Bluetooth 1",title:"Bluetooth channel 1",shortName:"BT1"},
+    {name:"Bluetooth 2",title:"Bluetooth channel 2",shortName:"BT2"},
+    {name:"Bluetooth 3",title:"Bluetooth channel 3",shortName:"BT3"},
+    {name:"Lock Win",title:"Lock the Windows key",shortName:"Lock\nWin"},
+    {name:"RGB Mode Cycle",title:"Cycle lighting effect",shortName:"RGB\nMode"},
+    {name:"RGB Color Cycle",title:"Cycle lighting color",shortName:"RGB\nColor"},
+    {name:"Brigth Inc",title:"Increase brightness",shortName:"Bright +"},
+    {name:"Brigth Dec",title:"Decrease brightness",shortName:"Bright −"},
+    {name:"Speed Inc",title:"Increase effect speed",shortName:"Speed +"},
+    {name:"Speed Dec",title:"Decrease effect speed",shortName:"Speed −"},
+    {name:"Game Mode",title:"Game mode",shortName:"Game"},
+    {name:"Game Mode Record",title:"Record game-mode lighting",shortName:"REC"},
+    {name:"RGB OFF/ON",title:"Turn lighting on/off",shortName:"RGB\nOn/Off"},
+    {name:"Keyboard Reset",title:"Factory reset the keyboard (hold 3 seconds)",shortName:"Reset"},
+    {name:"EMI Test",title:"EMI test (for manufacturer use)",shortName:"EMI"},
+    {name:"Battery View",title:"Show battery level",shortName:"Battery"},
+    {name:"WIN MAC",title:"Toggle Win/Mac",shortName:"Win/\nMac"},
+    {name:"WIN",title:"Windows mode",shortName:"Win\nmode"},
+    {name:"MAC",title:"Mac mode",shortName:"Mac\nmode"},
+    {name:"NKRO Mode",title:"Toggle N-key rollover",shortName:"NKRO"},
+    {name:"White Mode",title:"White lighting mode",shortName:"White\nmode"},
+    {name:"Swap ASDW",title:"Swap WASD with the arrow keys",shortName:"WASD\n⇄ ↑↓"},
+    {name:"Side Mode",title:"Side light effect",shortName:"Side\nmode"},
+    {name:"Side Color",title:"Side light color",shortName:"Side\ncolor"},
+    {name:"Side Bright",title:"Side light brightness",shortName:"Side\nbright"},
+    {name:"Side Speed",title:"Side light speed",shortName:"Side\nspeed"}
   ],
   matrix: {rows:6, cols:16},
   layouts: {keymap: [
@@ -217,7 +217,7 @@ const DEFAULT_DEF = {
   ]}
 };
 
-/* Sơ đồ phím gốc đọc từ AULA F65 thật (hàng 1–5 của 4 lớp) — dùng cho chế độ thử và khi chưa kết nối */
+/* Factory keymap read from a real AULA F65 (rows 1–5 of 4 layers) — used in demo mode and when not connected */
 const FACTORY_KEYMAP = (() => {
   const base = [
     '0029 001E 001F 0020 0021 0022 0023 0024 0025 0026 0027 002D 002E 002A 0000 004C',
@@ -238,7 +238,7 @@ const FACTORY_KEYMAP = (() => {
 })();
 
 /* ====================================================================
-   Tiện ích
+   Utilities
    ==================================================================== */
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
@@ -281,7 +281,7 @@ function download(name, obj){
 }
 
 /* ====================================================================
-   Giao thức VIA qua raw HID (usage page 0xFF60, gói 32 byte)
+   VIA protocol over raw HID (usage page 0xFF60, 32-byte packets)
    ==================================================================== */
 const CMD = { PROTO:0x01, GET_KB:0x02, KM_SET:0x05, KM_GET:0x04, KM_RESET:0x06, LIGHT_SET:0x07, LIGHT_GET:0x08, LIGHT_SAVE:0x09,
   MACRO_COUNT:0x0C, MACRO_SIZE:0x0D, MACRO_GET:0x0E, MACRO_SET:0x0F, MACRO_RESET:0x10, LAYERS:0x11, KM_GETBUF:0x12, UNHANDLED:0xFF };
@@ -296,7 +296,7 @@ class HidTransport {
     };
     dev.addEventListener('inputreport', this.onReport);
   }
-  get name(){ return this.dev.productName || 'Thiết bị HID'; }
+  get name(){ return this.dev.productName || 'HID device'; }
   get vid(){ return this.dev.vendorId; }
   get pid(){ return this.dev.productId; }
   async open(){ if (!this.dev.opened) await this.dev.open(); }
@@ -304,7 +304,7 @@ class HidTransport {
   send(bytes){
     const run = () => new Promise((resolve, reject) => {
       const buf = new Uint8Array(32); buf.set(bytes.slice(0, 32));
-      const timer = setTimeout(() => { this.pending = null; reject(new Error(`Bàn phím không phản hồi (lệnh 0x${hex(bytes[0])})`)); }, 1200);
+      const timer = setTimeout(() => { this.pending = null; reject(new Error(`Keyboard did not respond (command 0x${hex(bytes[0])})`)); }, 1200);
       this.pending = { cmd: bytes[0], resolve, timer };
       this.dev.sendReport(0, buf).catch(err => { clearTimeout(timer); this.pending = null; reject(err); });
     });
@@ -314,10 +314,10 @@ class HidTransport {
   }
 }
 
-/* Bàn phím giả lập — hoạt động giống AULA F65 thật đã kiểm thử */
+/* Simulated keyboard — behaves like the real AULA F65 that was tested */
 class MockTransport {
   constructor(def){
-    this.name = 'AULA F65 (giả lập)'; this.vid = 0x258A; this.pid = 0x010C; this.mock = true;
+    this.name = 'AULA F65 (simulated)'; this.vid = 0x258A; this.pid = 0x010C; this.mock = true;
     this.R = def.matrix.rows; this.C = def.matrix.cols; this.L = 4; this.proto = 11;
     this.km = new Uint16Array(this.L * this.R * this.C); this.macro = new Uint8Array(512);
     this.reset();
@@ -345,20 +345,20 @@ class MockTransport {
 }
 
 /* ====================================================================
-   Bảng keycode (QMK/VIA). VIA cũ (≤ v11) và mới (≥ v12) khác mã
-   cho phím lớp, macro, phím tùy biến và chuột.
+   Keycode table (QMK/VIA). Old (≤ v11) and new (≥ v12) VIA use different codes
+   for layer, macro, custom and mouse keys.
    ==================================================================== */
 const VER = {
   10: {MT:0x6000, LT:0x4000, TO:0x5010, MO:0x5100, DF:0x5200, TG:0x5300, OSL:0x5400, TT:0x5800, MACRO:0x5F12, MACRO_N:16, USER:0x5F80, GESC:0x5C16,
-       mouse:[['KC_MS_U',0xF0,'Chuột\n↑'],['KC_MS_D',0xF1,'Chuột\n↓'],['KC_MS_L',0xF2,'Chuột\n←'],['KC_MS_R',0xF3,'Chuột\n→'],['KC_BTN1',0xF4,'Click\ntrái'],['KC_BTN2',0xF5,'Click\nphải'],['KC_BTN3',0xF6,'Click\ngiữa'],['KC_BTN4',0xF7,'Chuột\n4'],['KC_BTN5',0xF8,'Chuột\n5'],['KC_WH_U',0xF9,'Cuộn\n↑'],['KC_WH_D',0xFA,'Cuộn\n↓'],['KC_WH_L',0xFB,'Cuộn\n←'],['KC_WH_R',0xFC,'Cuộn\n→'],['KC_ACL0',0xFD,'Tốc\n0'],['KC_ACL1',0xFE,'Tốc\n1'],['KC_ACL2',0xFF,'Tốc\n2']]},
+       mouse:[['KC_MS_U',0xF0,'Mouse\n↑'],['KC_MS_D',0xF1,'Mouse\n↓'],['KC_MS_L',0xF2,'Mouse\n←'],['KC_MS_R',0xF3,'Mouse\n→'],['KC_BTN1',0xF4,'Left\nclick'],['KC_BTN2',0xF5,'Right\nclick'],['KC_BTN3',0xF6,'Middle\nclick'],['KC_BTN4',0xF7,'Mouse\n4'],['KC_BTN5',0xF8,'Mouse\n5'],['KC_WH_U',0xF9,'Scroll\n↑'],['KC_WH_D',0xFA,'Scroll\n↓'],['KC_WH_L',0xFB,'Scroll\n←'],['KC_WH_R',0xFC,'Scroll\n→'],['KC_ACL0',0xFD,'Accel\n0'],['KC_ACL1',0xFE,'Accel\n1'],['KC_ACL2',0xFF,'Accel\n2']]},
   12: {MT:0x2000, LT:0x4000, TO:0x5200, MO:0x5220, DF:0x5240, TG:0x5260, OSL:0x5280, TT:0x52C0, MACRO:0x7700, MACRO_N:128, USER:0x7E00, GESC:0x7C16,
-       mouse:[['KC_MS_U',0xCD,'Chuột\n↑'],['KC_MS_D',0xCE,'Chuột\n↓'],['KC_MS_L',0xCF,'Chuột\n←'],['KC_MS_R',0xD0,'Chuột\n→'],['KC_BTN1',0xD1,'Click\ntrái'],['KC_BTN2',0xD2,'Click\nphải'],['KC_BTN3',0xD3,'Click\ngiữa'],['KC_BTN4',0xD4,'Chuột\n4'],['KC_BTN5',0xD5,'Chuột\n5'],['KC_WH_U',0xD9,'Cuộn\n↑'],['KC_WH_D',0xDA,'Cuộn\n↓'],['KC_WH_L',0xDB,'Cuộn\n←'],['KC_WH_R',0xDC,'Cuộn\n→'],['KC_ACL0',0xDD,'Tốc\n0'],['KC_ACL1',0xDE,'Tốc\n1'],['KC_ACL2',0xDF,'Tốc\n2']]},
+       mouse:[['KC_MS_U',0xCD,'Mouse\n↑'],['KC_MS_D',0xCE,'Mouse\n↓'],['KC_MS_L',0xCF,'Mouse\n←'],['KC_MS_R',0xD0,'Mouse\n→'],['KC_BTN1',0xD1,'Left\nclick'],['KC_BTN2',0xD2,'Right\nclick'],['KC_BTN3',0xD3,'Middle\nclick'],['KC_BTN4',0xD4,'Mouse\n4'],['KC_BTN5',0xD5,'Mouse\n5'],['KC_WH_U',0xD9,'Scroll\n↑'],['KC_WH_D',0xDA,'Scroll\n↓'],['KC_WH_L',0xDB,'Scroll\n←'],['KC_WH_R',0xDC,'Scroll\n→'],['KC_ACL0',0xDD,'Accel\n0'],['KC_ACL1',0xDE,'Accel\n1'],['KC_ACL2',0xDF,'Accel\n2']]},
 };
-/* Đặc điểm firmware đã kiểm thử trên bàn phím thật (AULA F65 có dây, 258A:010C):
-   - báo giao thức VIA v11 nhưng dùng bảng mã keycode v12 (Fn = MO(1) = 0x5221)
-   - phím riêng AULA = 0x7F00 + thứ tự trong customKeycodes
-   - lệnh 0x02 (ma trận), 0x04 (đọc 1 phím), 0x13 (ghi hàng loạt) không phản hồi
-   - không hỗ trợ lệnh đèn VIA */
+/* Firmware quirks verified on a real keyboard (wired AULA F65, 258A:010C):
+   - reports VIA protocol v11 but uses v12 keycodes (Fn = MO(1) = 0x5221)
+   - AULA custom keys = 0x7F00 + index in customKeycodes
+   - commands 0x02 (matrix), 0x04 (single-key read), 0x13 (bulk write) never reply
+   - VIA lighting commands are not supported */
 const PROFILES = {
   '258A:010C': { kcVer: 12, userBase: 0x7F00, noMatrix: true, noLight: true, noSingleRead: true,
                  layerNames: ['Win', 'Win + Fn', 'Mac', 'Mac + Fn'] },
@@ -374,24 +374,24 @@ function buildKC(ver, def, layerCount, userBase){
     list.push(e); if (!byCode.has(code)) byCode.set(code, e); byName.set(name.toUpperCase(), e); return e;
   };
   const alias = (a, name) => byName.set(a, byName.get(name));
-  add(0x00,'KC_NO','','Không làm gì (vô hiệu hóa phím)','special'); alias('XXXXXXX','KC_NO');
-  add(0x01,'KC_TRNS','▽','Trong suốt — dùng chức năng của lớp bên dưới','special'); alias('_______','KC_TRNS'); alias('KC_TRANSPARENT','KC_TRNS');
-  add(T.GESC,'QK_GESC','Esc\n~','Grave Escape: Esc, khi giữ Shift/Win thì ra ~ `','special'); alias('KC_GESC','QK_GESC');
+  add(0x00,'KC_NO','','Do nothing (disable the key)','special'); alias('XXXXXXX','KC_NO');
+  add(0x01,'KC_TRNS','▽','Transparent — use the key from the layer below','special'); alias('_______','KC_TRNS'); alias('KC_TRANSPARENT','KC_TRNS');
+  add(T.GESC,'QK_GESC','Esc\n~','Grave Escape: Esc, or ~ ` while Shift/Win is held','special'); alias('KC_GESC','QK_GESC');
   add(0x29,'KC_ESC','Esc','Escape','basic');
   for (let i = 0; i < 12; i++) add(0x3A+i, 'KC_F'+(i+1), 'F'+(i+1), null, 'basic');
-  add(0x35,'KC_GRV','~\n`','Phím ` ~','basic');
+  add(0x35,'KC_GRV','~\n`','` ~ key','basic');
   const shifted = '!@#$%^&*()';
-  '1234567890'.split('').forEach((d,i) => add(0x1E+i, 'KC_'+d, `${shifted[i]}\n${d}`, 'Phím '+d, 'basic'));
+  '1234567890'.split('').forEach((d,i) => add(0x1E+i, 'KC_'+d, `${shifted[i]}\n${d}`, 'Key '+d, 'basic'));
   add(0x2D,'KC_MINS','_\n-',null,'basic'); add(0x2E,'KC_EQL','+\n=',null,'basic'); add(0x2A,'KC_BSPC','Back\nspace','Backspace','basic');
   add(0x2B,'KC_TAB','Tab',null,'basic');
-  for (let i = 0; i < 26; i++){ const ch = String.fromCharCode(65+i); add(0x04+i, 'KC_'+ch, ch, 'Phím '+ch, 'basic'); }
+  for (let i = 0; i < 26; i++){ const ch = String.fromCharCode(65+i); add(0x04+i, 'KC_'+ch, ch, 'Key '+ch, 'basic'); }
   add(0x2F,'KC_LBRC','{\n[',null,'basic'); add(0x30,'KC_RBRC','}\n]',null,'basic'); add(0x31,'KC_BSLS','|\n\\',null,'basic');
   add(0x39,'KC_CAPS','Caps\nLock','Caps Lock','basic'); add(0x33,'KC_SCLN',':\n;',null,'basic'); add(0x34,'KC_QUOT','"\n\'',null,'basic');
   add(0x28,'KC_ENT','Enter',null,'basic'); add(0x36,'KC_COMM','<\n,',null,'basic'); add(0x37,'KC_DOT','>\n.',null,'basic');
   add(0x38,'KC_SLSH','?\n/',null,'basic'); add(0x2C,'KC_SPC','Space',null,'basic');
-  add(0xE0,'KC_LCTL','Ctrl','Ctrl trái','basic'); add(0xE1,'KC_LSFT','Shift','Shift trái','basic'); add(0xE2,'KC_LALT','Alt','Alt trái','basic'); add(0xE3,'KC_LGUI','Win','Windows trái','basic');
-  add(0xE4,'KC_RCTL','R Ctrl','Ctrl phải','basic'); add(0xE5,'KC_RSFT','R Shift','Shift phải','basic'); add(0xE6,'KC_RALT','R Alt','Alt phải','basic'); add(0xE7,'KC_RGUI','R Win','Windows phải','basic');
-  add(0x65,'KC_APP','Menu','Phím Menu (chuột phải)','basic');
+  add(0xE0,'KC_LCTL','Ctrl','Left Ctrl','basic'); add(0xE1,'KC_LSFT','Shift','Left Shift','basic'); add(0xE2,'KC_LALT','Alt','Left Alt','basic'); add(0xE3,'KC_LGUI','Win','Left Windows','basic');
+  add(0xE4,'KC_RCTL','R Ctrl','Right Ctrl','basic'); add(0xE5,'KC_RSFT','R Shift','Right Shift','basic'); add(0xE6,'KC_RALT','R Alt','Right Alt','basic'); add(0xE7,'KC_RGUI','R Win','Right Windows','basic');
+  add(0x65,'KC_APP','Menu','Menu key (right-click)','basic');
   add(0x52,'KC_UP','↑',null,'basic'); add(0x51,'KC_DOWN','↓',null,'basic'); add(0x50,'KC_LEFT','←',null,'basic'); add(0x4F,'KC_RGHT','→',null,'basic');
   add(0x49,'KC_INS','Ins','Insert','basic'); add(0x4C,'KC_DEL','Del','Delete','basic'); add(0x4A,'KC_HOME','Home',null,'basic'); add(0x4D,'KC_END','End',null,'basic');
   add(0x4B,'KC_PGUP','PgUp','Page Up','basic'); add(0x4E,'KC_PGDN','PgDn','Page Down','basic');
@@ -402,30 +402,30 @@ function buildKC(ver, def, layerCount, userBase){
   for (let i = 1; i <= 9; i++) add(0x58+i, 'KC_P'+i, 'Num\n'+i, null, 'numpad');
   add(0x62,'KC_P0','Num\n0',null,'numpad'); add(0x63,'KC_PDOT','Num\n.',null,'numpad'); add(0x67,'KC_PEQL','Num\n=',null,'numpad');
   for (let i = 13; i <= 24; i++) add(0x68+i-13, 'KC_F'+i, 'F'+i, null, 'fext');
-  add(0x64,'KC_NUBS','ISO\n\\','Phím \\ bàn phím ISO','fext'); add(0x32,'KC_NUHS','ISO\n#','Phím # bàn phím ISO','fext');
+  add(0x64,'KC_NUBS','ISO\n\\','ISO \\ key','fext'); add(0x32,'KC_NUHS','ISO\n#','ISO # key','fext');
   add(0x87,'KC_INT1','Ro',null,'fext'); add(0x88,'KC_INT2','Kana',null,'fext'); add(0x89,'KC_INT3','¥',null,'fext');
   add(0x8A,'KC_INT4','Henkan',null,'fext'); add(0x8B,'KC_INT5','Muhen',null,'fext'); add(0x90,'KC_LNG1','Lang1','Hangul/English','fext'); add(0x91,'KC_LNG2','Lang2','Hanja','fext');
-  add(0xA8,'KC_MUTE','Tắt\ntiếng','Mute','media'); add(0xAA,'KC_VOLD','Vol −','Giảm âm lượng','media'); add(0xA9,'KC_VOLU','Vol +','Tăng âm lượng','media');
-  add(0xAE,'KC_MPLY','Play\nPause','Phát / tạm dừng','media'); add(0xAD,'KC_MSTP','Stop','Dừng','media');
-  add(0xAC,'KC_MPRV','Bài\ntrước','Bài trước','media'); add(0xAB,'KC_MNXT','Bài\nsau','Bài tiếp theo','media');
-  add(0xBC,'KC_MRWD','Tua\nlùi',null,'media'); add(0xBB,'KC_MFFD','Tua\nnhanh',null,'media'); add(0xB0,'KC_EJCT','Eject',null,'media');
-  add(0xBD,'KC_BRIU','Màn\nhình +','Tăng độ sáng màn hình','media'); add(0xBE,'KC_BRID','Màn\nhình −','Giảm độ sáng màn hình','media');
-  add(0xB2,'KC_CALC','Máy\ntính','Calculator','app'); add(0xB1,'KC_MAIL','Mail',null,'app'); add(0xB3,'KC_MYCM','This\nPC','This PC / My Computer','app');
-  add(0xB4,'KC_WSCH','Web\ntìm','Tìm kiếm web','app'); add(0xB5,'KC_WHOM','Web\nhome',null,'app'); add(0xB6,'KC_WBAK','Web\nlùi',null,'app');
-  add(0xB7,'KC_WFWD','Web\ntiến',null,'app'); add(0xB9,'KC_WREF','Web\ntải lại',null,'app'); add(0xBA,'KC_WFAV','Web\nyêu thích',null,'app');
-  add(0xA5,'KC_PWR','Power','Tắt máy','app'); add(0xA6,'KC_SLEP','Sleep','Ngủ','app'); add(0xA7,'KC_WAKE','Wake',null,'app');
+  add(0xA8,'KC_MUTE','Mute','Mute','media'); add(0xAA,'KC_VOLD','Vol −','Volume down','media'); add(0xA9,'KC_VOLU','Vol +','Volume up','media');
+  add(0xAE,'KC_MPLY','Play\nPause','Play / pause','media'); add(0xAD,'KC_MSTP','Stop','Stop','media');
+  add(0xAC,'KC_MPRV','Prev\ntrack','Previous track','media'); add(0xAB,'KC_MNXT','Next\ntrack','Next track','media');
+  add(0xBC,'KC_MRWD','Rewind',null,'media'); add(0xBB,'KC_MFFD','Fast\nfwd',null,'media'); add(0xB0,'KC_EJCT','Eject',null,'media');
+  add(0xBD,'KC_BRIU','Screen\n+','Screen brightness up','media'); add(0xBE,'KC_BRID','Screen\n−','Screen brightness down','media');
+  add(0xB2,'KC_CALC','Calc','Calculator','app'); add(0xB1,'KC_MAIL','Mail',null,'app'); add(0xB3,'KC_MYCM','This\nPC','This PC / My Computer','app');
+  add(0xB4,'KC_WSCH','Web\nsearch','Web search','app'); add(0xB5,'KC_WHOM','Web\nhome',null,'app'); add(0xB6,'KC_WBAK','Web\nback',null,'app');
+  add(0xB7,'KC_WFWD','Web\nfwd',null,'app'); add(0xB9,'KC_WREF','Web\nrefresh',null,'app'); add(0xBA,'KC_WFAV','Web\nfav',null,'app');
+  add(0xA5,'KC_PWR','Power','Power off','app'); add(0xA6,'KC_SLEP','Sleep','Sleep','app'); add(0xA7,'KC_WAKE','Wake',null,'app');
   for (const [n,c,l] of T.mouse) add(c, n, l, null, 'mouse');
   for (let n = 0; n < 16; n++){
     const vis = n < layerCount ? 'layer' : 'layer-hidden';
-    add(T.MO+n, `MO(${n})`, `MO(${n})`, `Giữ để dùng lớp ${n}`, vis);
-    add(T.TG+n, `TG(${n})`, `TG(${n})`, `Bật/tắt lớp ${n}`, vis);
-    add(T.TO+n, `TO(${n})`, `TO(${n})`, `Chuyển hẳn sang lớp ${n}`, vis);
-    add(T.TT+n, `TT(${n})`, `TT(${n})`, `Giữ = lớp ${n}, nhấn nhiều lần = bật lớp`, vis);
-    add(T.OSL+n, `OSL(${n})`, `OSL(${n})`, `Lớp ${n} cho một lần nhấn kế tiếp`, vis);
-    add(T.DF+n, `DF(${n})`, `DF(${n})`, `Đặt lớp ${n} làm lớp mặc định`, vis);
+    add(T.MO+n, `MO(${n})`, `MO(${n})`, `Hold to use layer ${n}`, vis);
+    add(T.TG+n, `TG(${n})`, `TG(${n})`, `Toggle layer ${n}`, vis);
+    add(T.TO+n, `TO(${n})`, `TO(${n})`, `Switch to layer ${n}`, vis);
+    add(T.TT+n, `TT(${n})`, `TT(${n})`, `Hold = layer ${n}, tap repeatedly = toggle it`, vis);
+    add(T.OSL+n, `OSL(${n})`, `OSL(${n})`, `Layer ${n} for the next key press only`, vis);
+    add(T.DF+n, `DF(${n})`, `DF(${n})`, `Set layer ${n} as the default layer`, vis);
   }
   (def.customKeycodes || []).forEach((c, i) => add(T.USER+i, c.name.toUpperCase().replace(/[^A-Z0-9]+/g,'_'), c.shortName || c.name, c.title || c.name, 'aula'));
-  for (let i = 0; i < 64; i++) if (!byCode.has(T.USER+i)) add(T.USER+i, `USER${hex(i)}`, `USER\n${i}`, 'Phím tùy biến chưa đặt tên', 'user-hidden');
+  for (let i = 0; i < 64; i++) if (!byCode.has(T.USER+i)) add(T.USER+i, `USER${hex(i)}`, `USER\n${i}`, 'Unnamed custom key', 'user-hidden');
   for (let i = 0; i < T.MACRO_N; i++){ add(T.MACRO+i, `M${i}`, `M${i}`, `Macro ${i}`, 'macro'); alias(`MACRO${i}`, `M${i}`); }
   return {ver, T, list, byCode, byName};
 }
@@ -439,10 +439,10 @@ function kcInfo(code){
   const K = S.KC, T = K.T;
   if (K.byCode.has(code)) return K.byCode.get(code);
   const base = code & 0xFF, b = K.byCode.get(base), bn = b ? b.name : `0x${hex(base)}`, bl = b ? b.label.split('\n').pop() : hex(base);
-  if (code >= 0x0100 && code <= 0x1FFF){ const m = (code >> 8) & 0x1F; return {code, name: modName(m, bn), label: `${modLabel(m)}\n${bl}`, title: `Tổ hợp ${modLabel(m)} + ${bl}`, group:'combo'}; }
-  if (code >= T.MT && code < T.MT + 0x2000){ const m = (code >> 8) & 0x1F; return {code, name: `MT(${modMask(m)},${bn})`, label: `${bl}\n${modLabel(m)}`, title: `Nhấn = ${bl}, giữ = ${modLabel(m)}`, group:'combo'}; }
-  if (code >= T.LT && code < T.LT + 0x1000){ const n = (code >> 8) & 0x0F; return {code, name: `LT(${n},${bn})`, label: `${bl}\nLT ${n}`, title: `Nhấn = ${bl}, giữ = lớp ${n}`, group:'combo'}; }
-  return {code, name: `0x${hex(code,4)}`, label: hex(code,4), title: `Mã chưa biết 0x${hex(code,4)}`, group:'unknown'};
+  if (code >= 0x0100 && code <= 0x1FFF){ const m = (code >> 8) & 0x1F; return {code, name: modName(m, bn), label: `${modLabel(m)}\n${bl}`, title: `Combo ${modLabel(m)} + ${bl}`, group:'combo'}; }
+  if (code >= T.MT && code < T.MT + 0x2000){ const m = (code >> 8) & 0x1F; return {code, name: `MT(${modMask(m)},${bn})`, label: `${bl}\n${modLabel(m)}`, title: `Tap = ${bl}, hold = ${modLabel(m)}`, group:'combo'}; }
+  if (code >= T.LT && code < T.LT + 0x1000){ const n = (code >> 8) & 0x0F; return {code, name: `LT(${n},${bn})`, label: `${bl}\nLT ${n}`, title: `Tap = ${bl}, hold = layer ${n}`, group:'combo'}; }
+  return {code, name: `0x${hex(code,4)}`, label: hex(code,4), title: `Unknown code 0x${hex(code,4)}`, group:'unknown'};
 }
 
 function splitArgs(s){ const out = []; let depth = 0, cur = ''; for (const ch of s){ if (ch === '(') depth++; if (ch === ')') depth--; if (ch === ',' && depth === 0){ out.push(cur); cur = ''; } else cur += ch; } if (cur.trim()) out.push(cur); return out.map(x => x.trim()); }
@@ -463,7 +463,7 @@ function parseKc(str){
 }
 
 /* ====================================================================
-   Trạng thái
+   State
    ==================================================================== */
 const S = { def: DEFAULT_DEF, keys: [], t: null, profile: {}, proto: 0, layers: 4, layer: 0, keymap: null, sel: null, busy: false, status: '',
   KC: null, kcPref: lsGet('aula.kcVer') || 'auto', macroCount: 0, macroSize: 0, macros: [], macroSel: 0, light: null,
@@ -490,7 +490,7 @@ function parseLayout(def){
   return keys;
 }
 function setDef(def, persist){
-  if (!def?.matrix?.rows || !def?.layouts?.keymap) throw new Error('File không phải định nghĩa VIA hợp lệ (thiếu matrix/layouts.keymap)');
+  if (!def?.matrix?.rows || !def?.layouts?.keymap) throw new Error('Not a valid VIA definition file (missing matrix/layouts.keymap)');
   S.def = def; S.keys = parseLayout(def);
   if (persist !== undefined) lsSet('aula.def', persist ? JSON.stringify(def) : null);
   rebuildKC();
@@ -508,32 +508,32 @@ function rebuildKC(){
   S.KC = buildKC(ver, S.def, S.layers, prof.userBase ?? sn.userBase ?? null);
 }
 const isFactoryDef = () => toInt(S.def.vendorId) === 0x258A && toInt(S.def.productId) === 0x010C;
-/* sơ đồ đang hiển thị: của bàn phím thật, hoặc sơ đồ gốc khi chưa kết nối */
+/* keymap on screen: the real keyboard's, or the factory one when not connected */
 const viewKeymap = () => S.keymap || (isFactoryDef() ? FACTORY_KEYMAP : null);
 const getKc = (l, k, km = viewKeymap()) => km?.[l]?.[k.row * S.def.matrix.cols + k.col];
 const connected = () => !!S.t && !!S.keymap;
-const layerName = l => (S.t ? S.profile : PROFILES['258A:010C'])?.layerNames?.[l] ?? (l === 0 ? 'Chính' : `Lớp ${l}`);
+const layerName = l => (S.t ? S.profile : PROFILES['258A:010C'])?.layerNames?.[l] ?? (l === 0 ? 'Base' : `Layer ${l}`);
 
 /* ====================================================================
-   Thanh điều hướng & chip thiết bị
+   Navigation bar & device chip
    ==================================================================== */
 function renderNav(){
   const nt = $('#navtabs'); nt.innerHTML = '';
-  for (const [id, name] of [['configure','Cấu hình'],['test','Kiểm tra phím'],['settings','Cài đặt']])
+  for (const [id, name] of [['configure','Configure'],['test','Key Tester'],['settings','Settings']])
     nt.append(el('button', {class: S.page === id ? 'on' : '', onclick: () => go(id)}, icon(id, 17), el('span', {}, name)));
   const dc = $('#devchip'); dc.innerHTML = '';
   if (S.t){
     const kind = S.busy ? 'busy' : S.keymap ? 'ok' : 'err';
-    dc.append(el('div', {class:'chip', title: S.status}, el('span', {class:'dot ' + kind}), el('span', {}, S.busy ? 'Đang đọc…' : S.t.name),
-      el('button', {class:'iconbtn', title:'Ngắt kết nối', onclick: () => disconnect()}, icon('plug', 14))));
+    dc.append(el('div', {class:'chip', title: S.status}, el('span', {class:'dot ' + kind}), el('span', {}, S.busy ? 'Reading…' : S.t.name),
+      el('button', {class:'iconbtn', title:'Disconnect', onclick: () => disconnect()}, icon('plug', 14))));
   } else if ('hid' in navigator){
-    dc.append(el('button', {class:'btn primary', onclick: () => connect(false)}, 'Kết nối'));
+    dc.append(el('button', {class:'btn primary', onclick: () => connect(false)}, 'Connect'));
   }
 }
 function go(page){ S.page = page; if (page !== 'test') stopTester(); renderAll(); if (page === 'test') startTester(); }
 
 /* ====================================================================
-   Bàn phím
+   Keyboard
    ==================================================================== */
 function capType(code0){
   if (code0 === 0x29 || code0 === 0x28) return 'accent';
@@ -542,14 +542,14 @@ function capType(code0){
 }
 function renderStage(){
   const stage = $('#stage');
-  // thanh chọn lớp
+  // layer selector
   const lb = $('#layerbar'); lb.innerHTML = '';
   if (S.page === 'configure'){
-    lb.append(el('span', {class:'lbl'}, 'Lớp'));
+    lb.append(el('span', {class:'lbl'}, 'Layer'));
     for (let l = 0; l < S.layers; l++)
-      lb.append(el('button', {class: l === S.layer ? 'on' : '', title: `Lớp ${l}`, onclick: () => { S.layer = l; renderStage(); }}, `${l} · ${layerName(l)}`));
-  } else if (S.page === 'test') lb.append(el('span', {class:'lbl'}, 'Kiểm tra phím'));
-  // vẽ phím
+      lb.append(el('button', {class: l === S.layer ? 'on' : '', title: `Layer ${l}`, onclick: () => { S.layer = l; renderStage(); }}, `${l} · ${layerName(l)}`));
+  } else if (S.page === 'test') lb.append(el('span', {class:'lbl'}, 'Key Tester'));
+  // draw keys
   const kb = $('#kb'); kb.innerHTML = '';
   if (S.keys.length){
     const minY = Math.min(...S.keys.map(k => k.y));
@@ -567,7 +567,7 @@ function renderStage(){
       paintKey(k, layer);
     }
   }
-  // lớp phủ khi chưa kết nối
+  // overlay when not connected
   const ov = $('#overlay'); ov.innerHTML = '';
   const showOv = S.page === 'configure' && !connected();
   stage.classList.toggle('dim', showOv); ov.hidden = !showOv;
@@ -575,32 +575,32 @@ function renderStage(){
     const blocked = ('hid' in navigator) && !hidAllowed();
     const noHid = !('hid' in navigator) || blocked;
     ov.append(el('div', {class:'card'},
-      el('h2', {}, S.busy ? 'Đang đọc bàn phím…' : blocked ? 'Không thể truy cập USB ở đây' : 'Chưa kết nối bàn phím'),
-      el('p', {}, blocked ? 'Trang đang được mở trong một khung xem trước nên trình duyệt chặn kết nối tới bàn phím. Hãy mở trực tiếp file aula-f65-configurator.html bằng Google Chrome hoặc Microsoft Edge ' + openHint() + '.'
-                : noHid ? 'Trình duyệt này không hỗ trợ kết nối USB (WebHID). Safari và Firefox không dùng được — hãy mở file bằng Google Chrome hoặc Microsoft Edge ' + openHint() + '.'
-                        : S.t && !S.busy ? (S.status || 'Không đọc được dữ liệu từ thiết bị.') : 'Cắm AULA F65 bằng cáp USB, rồi bấm Kết nối và chọn bàn phím trong danh sách.'),
+      el('h2', {}, S.busy ? 'Reading keyboard…' : blocked ? 'USB access is blocked here' : 'Keyboard not connected'),
+      el('p', {}, blocked ? 'This page is open inside a preview frame, so the browser blocks access to the keyboard. Open the aula-f65-configurator-en.html file directly in Google Chrome or Microsoft Edge ' + openHint() + '.'
+                : noHid ? 'This browser does not support USB access (WebHID). Safari and Firefox will not work — open the file in Google Chrome or Microsoft Edge ' + openHint() + '.'
+                        : S.t && !S.busy ? (S.status || 'Could not read data from the device.') : 'Plug in the AULA F65 with a USB cable, click Connect, then pick the keyboard from the list.'),
       noHid || S.busy ? null : el('div', {class:'row'},
-        el('button', {class:'btn primary', onclick: () => connect(false)}, 'Kết nối bàn phím'),
-        el('button', {class:'btn', onclick: () => useTransport(new MockTransport(S.def))}, 'Chế độ thử'))));
+        el('button', {class:'btn primary', onclick: () => connect(false)}, 'Connect keyboard'),
+        el('button', {class:'btn', onclick: () => useTransport(new MockTransport(S.def))}, 'Demo mode'))));
   }
   renderSel();
 }
-/* Tên phím bổ trợ kiểu Mac (Cmd/Option) cho lớp Mac, hoặc khi máy đang chạy macOS mà lớp không ghi rõ Win/Mac */
+/* Mac-style modifier names (Cmd/Option) on Mac layers, or on macOS when a layer is not labelled Win/Mac */
 const isMacOS = () => /mac/i.test(navigator.userAgentData?.platform || navigator.platform || '');
 function macCtx(l){ const n = layerName(l); if (/mac/i.test(n)) return true; if (/win/i.test(n)) return false; return isMacOS(); }
 const macLabel = (s, group) => group === 'aula' ? s : s.replace(/\bWin\b/g, 'Cmd').replace(/\bAlt\b/g, 'Option');
 const keyLabel = (i, l) => macCtx(l) ? macLabel(i.label, i.group) : i.label;
 const openHint = () => isMacOS()
-  ? '(trên Mac: bấm chuột phải hoặc Control + bấm vào file → Mở bằng → Google Chrome)'
-  : '(chuột phải vào file → Open with → Chrome hoặc Edge)';
+  ? '(on a Mac: right-click or Control-click the file → Open With → Google Chrome)'
+  : '(right-click the file → Open with → Chrome or Edge)';
 function paintKey(k, layer){
   const code = getKc(layer, k);
   let cls = 'cap';
-  if (code == null){ k.lbl.textContent = ''; k.el.title = `Ma trận ${k.row},${k.col}`; }
+  if (code == null){ k.lbl.textContent = ''; k.el.title = `Matrix ${k.row},${k.col}`; }
   else {
     const i = {...kcInfo(code)}; i.label = keyLabel(i, layer);
     k.lbl.textContent = i.label;
-    k.el.title = `${i.title}\n${i.name} · 0x${hex(code,4)} · ma trận ${k.row},${k.col}`;
+    k.el.title = `${i.title}\n${i.name} · 0x${hex(code,4)} · matrix ${k.row},${k.col}`;
     if (code === 1) cls += ' trns'; else if (i.group === 'aula') cls += ' custom'; else if (i.group?.startsWith('layer')) cls += ' layer';
     const longest = Math.max(...i.label.split('\n').map(x => x.length));
     k.el.classList.toggle('xs', longest > 6 || (longest > 4 && k.w < 1.2));
@@ -616,15 +616,15 @@ function renderSel(){
   const box = $('#selinfo'); box.innerHTML = '';
   if (S.page === 'test'){ box.textContent = testHint; return; }
   if (S.page !== 'configure' || !connected()) return;
-  if (!S.sel){ box.textContent = 'Bấm vào một phím trên bàn phím, sau đó chọn chức năng mới ở bảng bên dưới.'; return; }
+  if (!S.sel){ box.textContent = 'Click a key on the keyboard, then pick its new function in the panel below.'; return; }
   const code = getKc(S.layer, S.sel), i = kcInfo(code);
-  box.append('Phím đang chọn (lớp ', el('b', {}, `${S.layer} · ${layerName(S.layer)}`), '): ', el('b', {}, i.title), ' ', el('code', {}, i.name));
+  box.append('Selected key (layer ', el('b', {}, `${S.layer} · ${layerName(S.layer)}`), '): ', el('b', {}, i.title), ' ', el('code', {}, i.name));
 }
 
 /* ====================================================================
-   Khu cấu hình phía dưới
+   Configuration area
    ==================================================================== */
-const MENUS = [['keymap','Gán phím'],['macro','Macro'],['light','Đèn'],['save','Lưu & Tải']];
+const MENUS = [['keymap','Keymap'],['macro','Macros'],['light','Lighting'],['save','Save + Load']];
 function renderConfig(){
   const cfg = $('#config'); cfg.innerHTML = '';
   cfg.style.display = 'grid';
@@ -640,16 +640,16 @@ function renderConfig(){
   else content.append(renderSavePane());
 }
 
-/* ---- Gán phím ---- */
-const CATS = [['basic','Cơ bản'],['media','Media & ứng dụng'],['mouse','Chuột'],['aula','Chức năng AULA'],['layer','Lớp'],['macro','Macro'],['special','Đặc biệt'],['advanced','Tổ hợp & nâng cao']];
+/* ---- Keymap ---- */
+const CATS = [['basic','Basic'],['media','Media & apps'],['mouse','Mouse'],['aula','AULA functions'],['layer','Layers'],['macro','Macro'],['special','Special'],['advanced','Combos & advanced']];
 const BASIC_SECTIONS = [
-  ['Chữ cái', Array.from({length:26}, (_,i) => 0x04+i)],
-  ['Số & ký hiệu', [0x35,0x1E,0x1F,0x20,0x21,0x22,0x23,0x24,0x25,0x26,0x27,0x2D,0x2E,0x2F,0x30,0x31,0x33,0x34,0x36,0x37,0x38]],
-  ['Điều khiển', [0x29,0x2B,0x39,0x2A,0x28,0x2C,0x65]],
-  ['Phím bổ trợ', [0xE0,0xE1,0xE2,0xE3,0xE4,0xE5,0xE6,0xE7]],
-  ['Điều hướng', [0x52,0x51,0x50,0x4F,0x49,0x4C,0x4A,0x4D,0x4B,0x4E]],
+  ['Letters', Array.from({length:26}, (_,i) => 0x04+i)],
+  ['Numbers & symbols', [0x35,0x1E,0x1F,0x20,0x21,0x22,0x23,0x24,0x25,0x26,0x27,0x2D,0x2E,0x2F,0x30,0x31,0x33,0x34,0x36,0x37,0x38]],
+  ['Editing', [0x29,0x2B,0x39,0x2A,0x28,0x2C,0x65]],
+  ['Modifiers', [0xE0,0xE1,0xE2,0xE3,0xE4,0xE5,0xE6,0xE7]],
+  ['Navigation', [0x52,0x51,0x50,0x4F,0x49,0x4C,0x4A,0x4D,0x4B,0x4E]],
   ['F1 – F12', Array.from({length:12}, (_,i) => 0x3A+i)],
-  ['Hệ thống', [0x46,0x47,0x48]],
+  ['System', [0x46,0x47,0x48]],
 ];
 function kcButton(e, wide){
   return el('button', {class: 'kc' + (wide ? ' w2' : '') + (e.group === 'aula' ? ' custom' : e.group?.startsWith('layer') ? ' layer' : ''),
@@ -661,39 +661,39 @@ function renderKeymapPane(content){
   for (const [id, name] of CATS) cats.append(el('button', {class: S.cat === id ? 'on' : '', onclick: () => { S.cat = id; renderConfig(); }}, name));
   const area = el('div', {class:'grid-area'});
   content.append(cats, area);
-  if (!connected()){ area.append(el('p', {class:'note'}, 'Kết nối bàn phím để gán phím.')); return; }
-  area.append(el('p', {class:'note', id:'pickHint', hidden: !!S.sel}, 'Hãy bấm chọn một phím trên bàn phím phía trên trước. Sau khi gán, ô chọn tự chuyển sang phím kế tiếp.'));
+  if (!connected()){ area.append(el('p', {class:'note'}, 'Connect a keyboard to remap keys.')); return; }
+  area.append(el('p', {class:'note', id:'pickHint', hidden: !!S.sel}, 'First click a key on the keyboard above. After you assign a function, the selection moves to the next key.'));
   const K = S.KC, by = c => K.byCode.get(c), grp = g => K.list.filter(e => e.group === g);
   switch (S.cat){
     case 'basic': for (const [t, codes] of BASIC_SECTIONS) area.append(...section(t, codes.map(by))); break;
-    case 'media': area.append(...section('Âm thanh & phát nhạc', grp('media')), ...section('Ứng dụng & hệ thống', grp('app'))); break;
-    case 'mouse': area.append(el('p', {class:'note'}, 'Điều khiển con trỏ chuột bằng bàn phím. Tùy firmware, một số phím có thể không hoạt động.'), ...section('Chuột', grp('mouse'))); break;
+    case 'media': area.append(...section('Audio & playback', grp('media')), ...section('Apps & system', grp('app'))); break;
+    case 'mouse': area.append(el('p', {class:'note'}, 'Control the mouse pointer from the keyboard. Depending on the firmware, some of these may not work.'), ...section('Mouse', grp('mouse'))); break;
     case 'aula': {
       const all = grp('aula'), used = new Set(), pick = names => all.filter(e => names.includes(e.name) && used.add(e.name));
-      area.append(el('p', {class:'note'}, 'Các chức năng riêng của AULA F65. Mặc định chúng nằm ở lớp "Win + Fn" và "Mac + Fn" (giữ Fn rồi nhấn phím).'));
+      area.append(el('p', {class:'note'}, 'AULA F65-specific functions. By default they live on the "Win + Fn" and "Mac + Fn" layers (hold Fn and press the key).'));
       for (const [t, names] of [
-        ['Kết nối', ['USB_MODE','2_4G_MODE','BLUETOOTH_1','BLUETOOTH_2','BLUETOOTH_3','BATTERY_VIEW']],
-        ['Đèn nền', ['RGB_OFF_ON','RGB_MODE_CYCLE','RGB_COLOR_CYCLE','BRIGTH_INC','BRIGTH_DEC','SPEED_INC','SPEED_DEC','WHITE_MODE','GAME_MODE','GAME_MODE_RECORD']],
-        ['Đèn cạnh', ['SIDE_MODE','SIDE_COLOR','SIDE_BRIGHT','SIDE_SPEED']],
-        ['Hệ thống', ['LOCK_WIN','WIN_MAC','WIN','MAC','NKRO_MODE','SWAP_ASDW','KEYBOARD_RESET','EMI_TEST']]]){
+        ['Connection', ['USB_MODE','2_4G_MODE','BLUETOOTH_1','BLUETOOTH_2','BLUETOOTH_3','BATTERY_VIEW']],
+        ['Backlight', ['RGB_OFF_ON','RGB_MODE_CYCLE','RGB_COLOR_CYCLE','BRIGTH_INC','BRIGTH_DEC','SPEED_INC','SPEED_DEC','WHITE_MODE','GAME_MODE','GAME_MODE_RECORD']],
+        ['Side light', ['SIDE_MODE','SIDE_COLOR','SIDE_BRIGHT','SIDE_SPEED']],
+        ['System', ['LOCK_WIN','WIN_MAC','WIN','MAC','NKRO_MODE','SWAP_ASDW','KEYBOARD_RESET','EMI_TEST']]]){
         const items = pick(names); if (items.length) area.append(...section(t, items));
       }
       const rest = all.filter(e => !used.has(e.name));
-      if (rest.length) area.append(...section('Khác', rest));
+      if (rest.length) area.append(...section('Other', rest));
       break;
     }
     case 'layer': {
-      area.append(el('p', {class:'note'}, 'MO = giữ để dùng lớp · TG = bật/tắt lớp · TO = chuyển hẳn sang lớp · TT = giữ, hoặc nhấn liên tiếp để bật · OSL = lớp cho 1 lần nhấn · DF = đổi lớp mặc định.'));
+      area.append(el('p', {class:'note'}, 'MO = hold to use a layer · TG = toggle a layer · TO = switch to a layer · TT = hold, or tap repeatedly to toggle · OSL = layer for one key press · DF = change the default layer.'));
       for (const p of ['MO','TG','TO','TT','OSL','DF']) area.append(...section(p, grp('layer').filter(e => e.name.startsWith(p + '('))));
       break;
     }
     case 'macro':
-      if (!S.macroCount){ area.append(el('p', {class:'note'}, 'Bàn phím không hỗ trợ macro.')); break; }
-      area.append(el('p', {class:'note'}, 'Gán macro vào phím. Nội dung macro chỉnh ở mục "Macro" bên trái.'),
-        ...section('Macro', grp('macro').slice(0, S.macroCount).map(e => ({...e, title: S.macros[e.code - K.T.MACRO] ? `Macro: ${S.macros[e.code - K.T.MACRO]}` : 'Macro trống'}))));
+      if (!S.macroCount){ area.append(el('p', {class:'note'}, 'This keyboard does not support macros.')); break; }
+      area.append(el('p', {class:'note'}, 'Assign a macro to a key. Edit macro contents under "Macros" on the left.'),
+        ...section('Macro', grp('macro').slice(0, S.macroCount).map(e => ({...e, title: S.macros[e.code - K.T.MACRO] ? `Macro: ${S.macros[e.code - K.T.MACRO]}` : 'Empty macro'}))));
       break;
     case 'special':
-      area.append(...section('Đặc biệt', [by(0x01), by(0x00), by(K.T.GESC)]), ...section('Bàn phím số', grp('numpad')), ...section('F13 – F24 & quốc tế', grp('fext')));
+      area.append(...section('Special', [by(0x01), by(0x00), by(K.T.GESC)]), ...section('Numpad', grp('numpad')), ...section('F13 – F24 & international', grp('fext')));
       break;
     case 'advanced': area.append(renderAdvanced()); break;
   }
@@ -702,34 +702,34 @@ function basicSelect(){ const s = el('select'); for (const e of S.KC.list.filter
 function modChecks(){
   const box = el('div', {class:'row'}); const boxes = {};
   for (const [b, n] of [[1,'Ctrl'],[2,'Shift'],[4,'Alt'],[8,'Win']]){ const c = el('input', {type:'checkbox'}); boxes[b] = c; box.append(el('label', {class:'chk'}, c, n)); }
-  const right = el('input', {type:'checkbox'}); box.append(el('label', {class:'chk'}, right, 'bên phải'));
+  const right = el('input', {type:'checkbox'}); box.append(el('label', {class:'chk'}, right, 'right side'));
   return {box, get: () => { let m = 0; for (const b in boxes) if (boxes[b].checked) m |= +b; return m ? m | (right.checked ? 0x10 : 0) : 0; }};
 }
 function renderAdvanced(){
   const T = S.KC.T, g = el('div', {class:'cards'});
   { const mc = modChecks(), ks = basicSelect();
-    g.append(el('div', {class:'card'}, el('h3', {}, 'Tổ hợp phím'), el('p', {}, 'Một lần nhấn gửi cả tổ hợp, ví dụ Ctrl + C.'), mc.box, el('div', {class:'row', style:'margin-top:10px'}, ks,
-      el('button', {class:'btn primary', onclick: () => { const m = mc.get(); if (!m) return toast('Chọn ít nhất một phím bổ trợ', true); assign((m << 8) | +ks.value); }}, 'Gán')))); }
+    g.append(el('div', {class:'card'}, el('h3', {}, 'Key combo'), el('p', {}, 'One press sends the whole combo, e.g. Ctrl + C.'), mc.box, el('div', {class:'row', style:'margin-top:10px'}, ks,
+      el('button', {class:'btn primary', onclick: () => { const m = mc.get(); if (!m) return toast('Pick at least one modifier', true); assign((m << 8) | +ks.value); }}, 'Assign')))); }
   { const mc = modChecks(), ks = basicSelect();
-    g.append(el('div', {class:'card'}, el('h3', {}, 'Nhấn / giữ'), el('p', {}, 'Nhấn nhanh = phím thường, giữ = phím bổ trợ (Mod-Tap).'), mc.box, el('div', {class:'row', style:'margin-top:10px'}, ks,
-      el('button', {class:'btn primary', onclick: () => { const m = mc.get(); if (!m) return toast('Chọn ít nhất một phím bổ trợ', true); assign(T.MT | (m << 8) | +ks.value); }}, 'Gán')))); }
-  { const ls = el('select'); for (let l = 0; l < S.layers; l++) ls.append(el('option', {value:l}, `Lớp ${l} · ${layerName(l)}`)); const ks = basicSelect();
-    g.append(el('div', {class:'card'}, el('h3', {}, 'Nhấn = phím, giữ = lớp'), el('p', {}, 'Layer-Tap: giữ để chuyển lớp, nhấn nhanh ra phím thường.'), el('div', {class:'row'}, 'Giữ', ls, 'Nhấn', ks,
-      el('button', {class:'btn primary', onclick: () => assign(T.LT | (+ls.value << 8) | +ks.value)}, 'Gán')))); }
+    g.append(el('div', {class:'card'}, el('h3', {}, 'Tap / hold'), el('p', {}, 'Tap = normal key, hold = modifier (Mod-Tap).'), mc.box, el('div', {class:'row', style:'margin-top:10px'}, ks,
+      el('button', {class:'btn primary', onclick: () => { const m = mc.get(); if (!m) return toast('Pick at least one modifier', true); assign(T.MT | (m << 8) | +ks.value); }}, 'Assign')))); }
+  { const ls = el('select'); for (let l = 0; l < S.layers; l++) ls.append(el('option', {value:l}, `Layer ${l} · ${layerName(l)}`)); const ks = basicSelect();
+    g.append(el('div', {class:'card'}, el('h3', {}, 'Tap = key, hold = layer'), el('p', {}, 'Layer-Tap: hold to switch layers, tap for a normal key.'), el('div', {class:'row'}, 'Hold', ls, 'Tap', ks,
+      el('button', {class:'btn primary', onclick: () => assign(T.LT | (+ls.value << 8) | +ks.value)}, 'Assign')))); }
   { const inp = el('input', {type:'text', placeholder:'KC_A, LCTL(KC_C), MO(1), 0x7F02…', style:'flex:1;min-width:180px'});
-    const goKc = () => { const c = parseKc(inp.value); if (c == null) return toast('Không hiểu mã này', true); assign(c); };
+    const goKc = () => { const c = parseKc(inp.value); if (c == null) return toast('Unrecognised keycode', true); assign(c); };
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') goKc(); });
-    g.append(el('div', {class:'card'}, el('h3', {}, 'Nhập mã bất kỳ'), el('p', {}, 'Dành cho người đã quen mã QMK/VIA.'), el('div', {class:'row'}, inp, el('button', {class:'btn primary', onclick: goKc}, 'Gán')))); }
+    g.append(el('div', {class:'card'}, el('h3', {}, 'Enter any keycode'), el('p', {}, 'For people familiar with QMK/VIA keycodes.'), el('div', {class:'row'}, inp, el('button', {class:'btn primary', onclick: goKc}, 'Assign')))); }
   return g;
 }
 
 async function assign(code){
-  if (!connected()) return toast('Chưa kết nối bàn phím', true);
-  if (!S.sel) return toast('Hãy bấm chọn một phím trên bàn phím trước', true);
+  if (!connected()) return toast('Keyboard not connected', true);
+  if (!S.sel) return toast('Click a key on the keyboard first', true);
   const k = S.sel, C = S.def.matrix.cols;
   try {
     const r = await S.t.send([CMD.KM_SET, S.layer, k.row, k.col, code >> 8, code & 0xFF]);
-    if (r[0] === CMD.UNHANDLED) throw new Error('Bàn phím từ chối lệnh ghi phím');
+    if (r[0] === CMD.UNHANDLED) throw new Error('The keyboard rejected the key write');
     S.keymap[S.layer][k.row*C + k.col] = code;
     const idx = S.keys.indexOf(k); S.sel = S.keys[idx + 1] || null;
     repaint(); syncHint();
@@ -737,27 +737,27 @@ async function assign(code){
 }
 
 /* ====================================================================
-   Kết nối
+   Connection
    ==================================================================== */
-/* Trang mở trong iframe/khung xem trước (vd. khung xem trước của ứng dụng) thường bị chặn WebHID */
+/* Pages opened inside an iframe or app preview pane are usually blocked from WebHID */
 let hidBlocked = false;
 function hidAllowed(){
   try { const fp = document.permissionsPolicy || document.featurePolicy; if (fp && !fp.allowsFeature('hid')) return false; } catch {}
   return !hidBlocked;
 }
 async function connect(all){
-  if (!('hid' in navigator)) return toast('Trình duyệt không hỗ trợ WebHID', true);
+  if (!('hid' in navigator)) return toast('This browser does not support WebHID', true);
   const filters = all ? [] : [{vendorId: toInt(S.def.vendorId), usagePage: 0xFF60, usage: 0x61}, {usagePage: 0xFF60, usage: 0x61}];
-  if (!hidAllowed()){ hidBlocked = true; renderAll(); return toast('Trang đang mở trong khung xem trước nên bị chặn truy cập USB. Hãy mở file bằng Chrome hoặc Edge.', true); }
+  if (!hidAllowed()){ hidBlocked = true; renderAll(); return toast('This page is open in a preview frame, so USB access is blocked. Open the file in Chrome or Edge.', true); }
   let devs;
   try { devs = await navigator.hid.requestDevice({filters}); }
   catch (e){
-    if (/permissions policy|disallowed/i.test(e.message)){ hidBlocked = true; renderAll(); return toast('Trang đang mở trong khung xem trước nên bị chặn truy cập USB. Hãy mở file bằng Chrome hoặc Edge.', true); }
+    if (/permissions policy|disallowed/i.test(e.message)){ hidBlocked = true; renderAll(); return toast('This page is open in a preview frame, so USB access is blocked. Open the file in Chrome or Edge.', true); }
     return toast(e.message, true);
   }
   if (!devs.length) return;
   const dev = devs.find(d => d.collections.some(c => c.usagePage === 0xFF60)) || devs[0];
-  if (!dev.collections.some(c => c.usagePage === 0xFF60)) toast('Thiết bị này không có cổng cấu hình VIA — có thể sẽ không giao tiếp được', true);
+  if (!dev.collections.some(c => c.usagePage === 0xFF60)) toast('This device has no VIA configuration interface — communication may fail', true);
   await useTransport(new HidTransport(dev));
 }
 async function useTransport(t){
@@ -768,7 +768,7 @@ async function useTransport(t){
   try {
     await t.open();
     const p = await t.send([CMD.PROTO]);
-    if (p[0] === CMD.UNHANDLED) throw new Error('Thiết bị không hỗ trợ giao thức VIA');
+    if (p[0] === CMD.UNHANDLED) throw new Error('The device does not support the VIA protocol');
     S.proto = (p[1] << 8) | p[2];
     const lc = await t.send([CMD.LAYERS]); S.layers = lc[0] === CMD.UNHANDLED || !lc[1] ? 4 : lc[1];
     S.layer = Math.min(S.layer, S.layers - 1);
@@ -779,10 +779,10 @@ async function useTransport(t){
       if (S.macroCount){ const ms = await t.send([CMD.MACRO_SIZE]); S.macroSize = (ms[1] << 8) | ms[2]; await readMacros(); }
     } catch { S.macroCount = 0; }
     if (!S.profile.noLight) try { await lightProbe(); } catch { S.light = null; }
-    S.status = `${t.name} · VIA v${S.proto} · ${S.layers} lớp`;
-    if (t.mock) toast('Đang ở chế độ thử: thay đổi chỉ nằm trong bộ nhớ, không gửi tới bàn phím thật');
+    S.status = `${t.name} · VIA v${S.proto} · ${S.layers} layers`;
+    if (t.mock) toast('Demo mode: changes stay in memory and are not sent to a real keyboard');
   } catch (e){
-    S.keymap = null; S.status = 'Lỗi: ' + e.message; toast(e.message, true);
+    S.keymap = null; S.status = 'Error: ' + e.message; toast(e.message, true);
   }
   S.busy = false; progress(null); renderAll();
 }
@@ -808,7 +808,7 @@ async function readKeymap(){
   if (ok){
     for (let l = 0; l < L; l++) for (let i = 0; i < R*C; i++){ const o = (l*R*C + i)*2; km[l][i] = (buf[o] << 8) | buf[o+1]; }
   } else {
-    if (S.profile.noSingleRead) throw new Error('Không đọc được sơ đồ phím');
+    if (S.profile.noSingleRead) throw new Error('Could not read the keymap');
     let n = 0;
     for (let l = 0; l < L; l++) for (const k of S.keys){
       const r = await S.t.send([CMD.KM_GET, l, k.row, k.col]);
@@ -854,8 +854,8 @@ function macroDecode(bytes){
 }
 function macroEncode(text){
   const out = [];
-  const kc = s => { const c = parseKc(s); if (c == null || c > 0xFF) throw new Error(`"${s}" không phải phím cơ bản hợp lệ`); return c; };
-  const pushText = s => { for (const ch of s){ const c = ch.charCodeAt(0); if (c > 0x7E || (c < 0x20 && c !== 0x0A && c !== 0x09)) throw new Error(`ký tự "${ch}" không được hỗ trợ (chỉ dùng chữ không dấu)`); out.push(c); } };
+  const kc = s => { const c = parseKc(s); if (c == null || c > 0xFF) throw new Error(`"${s}" is not a valid basic key`); return c; };
+  const pushText = s => { for (const ch of s){ const c = ch.charCodeAt(0); if (c > 0x7E || (c < 0x20 && c !== 0x0A && c !== 0x09)) throw new Error(`character "${ch}" is not supported (ASCII only)`); out.push(c); } };
   const re = /\{([^}]*)\}/g; let last = 0, m;
   while ((m = re.exec(text))){
     pushText(text.slice(last, m.index)); last = re.lastIndex;
@@ -886,7 +886,7 @@ async function readMacros(){
 async function writeMacros(texts){
   const data = [];
   texts.forEach((t, i) => { try { data.push(...macroEncode(t), 0); } catch (e){ throw new Error(`M${i}: ${e.message}`); } });
-  if (data.length > S.macroSize) throw new Error(`Macro quá dài: ${data.length}/${S.macroSize} byte`);
+  if (data.length > S.macroSize) throw new Error(`Macro too long: ${data.length}/${S.macroSize} bytes`);
   for (let off = 0; off < data.length; off += 28){
     const chunk = data.slice(off, off + 28);
     await S.t.send([CMD.MACRO_SET, off >> 8, off & 0xFF, chunk.length, ...chunk]);
@@ -900,37 +900,37 @@ function macroBytes(texts){ let n = 0; for (const t of texts){ try { n += macroE
 let draft = null, recording = null;
 function renderMacroPane(){
   const page = el('div', {class:'page'});
-  if (!connected()){ page.append(el('p', {class:'note'}, 'Kết nối bàn phím để chỉnh macro.')); return page; }
-  if (!S.macroCount){ page.append(el('p', {class:'note'}, 'Bàn phím không hỗ trợ macro.')); return page; }
+  if (!connected()){ page.append(el('p', {class:'note'}, 'Connect a keyboard to edit macros.')); return page; }
+  if (!S.macroCount){ page.append(el('p', {class:'note'}, 'This keyboard does not support macros.')); return page; }
   if (!draft || draft.length !== S.macroCount) draft = [...S.macros];
   const i = S.macroSel;
   const chips = el('div', {class:'mchips'});
   for (let n = 0; n < S.macroCount; n++)
-    chips.append(el('button', {class: (n === i ? 'on ' : '') + (draft[n] ? 'has' : ''), title: draft[n] || 'Trống', onclick: () => { S.macroSel = n; renderConfig(); }}, `M${n}`));
-  const ta = el('textarea', {placeholder: 'Ví dụ:  Xin chao{KC_ENT}   hoặc   {KC_LCTL,KC_C}', spellcheck: 'false'}); ta.value = draft[i];
+    chips.append(el('button', {class: (n === i ? 'on ' : '') + (draft[n] ? 'has' : ''), title: draft[n] || 'Empty', onclick: () => { S.macroSel = n; renderConfig(); }}, `M${n}`));
+  const ta = el('textarea', {placeholder: 'Example:  Hello{KC_ENT}   or   {KC_LCTL,KC_C}', spellcheck: 'false'}); ta.value = draft[i];
   const used = () => macroBytes(draft), meterBar = el('div'), meterTxt = el('span', {class:'note'});
-  const updMeter = () => { const u = used(); meterBar.style.width = Math.min(100, u / S.macroSize * 100) + '%'; meterTxt.textContent = `Bộ nhớ: ${u} / ${S.macroSize} byte`; };
+  const updMeter = () => { const u = used(); meterBar.style.width = Math.min(100, u / S.macroSize * 100) + '%'; meterTxt.textContent = `Memory: ${u} / ${S.macroSize} bytes`; };
   ta.addEventListener('input', () => { draft[i] = ta.value; updMeter(); chips.children[i].classList.toggle('has', !!ta.value); });
   const insert = s => { const a = ta.selectionStart, b = ta.selectionEnd; ta.value = ta.value.slice(0, a) + s + ta.value.slice(b); ta.selectionStart = ta.selectionEnd = a + s.length; ta.focus(); ta.dispatchEvent(new Event('input')); };
   const toks = el('div', {class:'tokbar'},
     el('button', {onclick: () => insert('{KC_ENT}')}, '+ Enter'), el('button', {onclick: () => insert('{KC_TAB}')}, '+ Tab'),
     el('button', {onclick: () => insert('{KC_LCTL,KC_C}')}, '+ Ctrl+C'), el('button', {onclick: () => insert('{KC_LCTL,KC_V}')}, '+ Ctrl+V'),
-    el('button', {onclick: () => insert('{KC_LGUI,KC_R}')}, '+ Win+R'), el('button', {onclick: () => insert('{100}')}, '+ Chờ 100 ms'));
-  const recBtn = el('button', {class:'btn' + (recording ? ' rec' : ''), onclick: () => toggleRecord(ta, recBtn)}, recording ? '■ Dừng ghi' : '● Ghi từ bàn phím');
+    el('button', {onclick: () => insert('{KC_LGUI,KC_R}')}, '+ Win+R'), el('button', {onclick: () => insert('{100}')}, '+ Wait 100 ms'));
+  const recBtn = el('button', {class:'btn' + (recording ? ' rec' : ''), onclick: () => toggleRecord(ta, recBtn)}, recording ? '■ Stop recording' : '● Record from keyboard');
   const dirty = JSON.stringify(draft) !== JSON.stringify(S.macros);
   page.append(chips,
     el('div', {class:'card'},
       el('h3', {}, `Macro M${i}`),
-      el('p', {}, 'Gõ chữ bình thường để bàn phím tự gõ ra. Dùng các nút dưới đây để chèn phím đặc biệt, hoặc bấm "Ghi từ bàn phím" rồi gõ.'),
+      el('p', {}, 'Type plain text and the keyboard will type it out. Use the buttons below to insert special keys, or click "Record from keyboard" and type.'),
       ta, toks,
       el('div', {class:'row'},
-        el('button', {class:'btn primary', disabled: !dirty, onclick: saveMacros}, 'Lưu vào bàn phím'),
-        el('button', {class:'btn', disabled: !dirty, onclick: () => { draft = [...S.macros]; renderConfig(); }}, 'Hoàn tác'),
+        el('button', {class:'btn primary', disabled: !dirty, onclick: saveMacros}, 'Save to keyboard'),
+        el('button', {class:'btn', disabled: !dirty, onclick: () => { draft = [...S.macros]; renderConfig(); }}, 'Undo'),
         recBtn,
         el('span', {style:'flex:1'}),
-        el('button', {class:'btn danger', onclick: resetMacros}, 'Xóa tất cả macro')),
+        el('button', {class:'btn danger', onclick: resetMacros}, 'Clear all macros')),
       el('div', {class:'meter', style:'margin-top:14px'}, meterBar), meterTxt),
-    el('p', {class:'note', style:'margin-top:14px'}, 'Cú pháp: ', el('code', {}, '{KC_A}'), ' nhấn phím · ', el('code', {}, '{KC_LCTL,KC_C}'), ' tổ hợp · ', el('code', {}, '{+KC_LSFT}'), ' / ', el('code', {}, '{-KC_LSFT}'), ' giữ / nhả · ', el('code', {}, '{200}'), ' chờ 200 ms. Không gõ được tiếng Việt có dấu. Gán macro vào phím ở mục Gán phím → Macro.'));
+    el('p', {class:'note', style:'margin-top:14px'}, 'Syntax: ', el('code', {}, '{KC_A}'), ' tap a key · ', el('code', {}, '{KC_LCTL,KC_C}'), ' combo · ', el('code', {}, '{+KC_LSFT}'), ' / ', el('code', {}, '{-KC_LSFT}'), ' hold / release · ', el('code', {}, '{200}'), ' wait 200 ms. Only ASCII characters can be typed. Assign a macro to a key under Keymap → Macro.'));
   updMeter();
   return page;
 }
@@ -938,7 +938,7 @@ function toggleRecord(ta, btn){
   if (recording){
     window.removeEventListener('keydown', recording.h, true); window.removeEventListener('keyup', recording.h, true);
     const ev = recording.ev, still = [...recording.down].reverse(); recording = null;
-    for (const c of still) ev.push([3, c]); // nhả các phím chưa nhận được sự kiện nhả
+    for (const c of still) ev.push([3, c]); // release keys whose keyup never arrived
     const bytes = [];
     for (let i = 0; i < ev.length; i++){
       const [t, c] = ev[i];
@@ -947,8 +947,8 @@ function toggleRecord(ta, btn){
     }
     const txt = macroDecode(bytes);
     ta.value += txt; ta.dispatchEvent(new Event('input'));
-    btn.textContent = '● Ghi từ bàn phím'; btn.classList.remove('rec');
-    toast(txt ? 'Đã ghi macro' : 'Không ghi được phím nào');
+    btn.textContent = '● Record from keyboard'; btn.classList.remove('rec');
+    toast(txt ? 'Macro recorded' : 'No keys were recorded');
     return;
   }
   const ev = [], down = new Set();
@@ -957,27 +957,27 @@ function toggleRecord(ta, btn){
     const c = CODE_TO_HID[e.code]; if (c == null) return;
     e.preventDefault(); e.stopPropagation();
     if (e.type === 'keydown'){ if (down.has(c)) return; down.add(c); ev.push([2, c]); return; }
-    // macOS: khi giữ Cmd, trình duyệt không gửi keyup cho các phím khác → nhả chúng trước khi nhả Cmd
+    // macOS: while Cmd is held the browser sends no keyup for other keys → release them before Cmd
     if (c === 0xE3 || c === 0xE7) for (const o of [...down].reverse()) if (o < 0xE0){ down.delete(o); ev.push([3, o]); }
     if (!down.has(c)) return;
     down.delete(c); ev.push([3, c]);
   };
   recording = {ev, h, down};
   window.addEventListener('keydown', h, true); window.addEventListener('keyup', h, true);
-  btn.textContent = '■ Dừng ghi'; btn.classList.add('rec'); btn.blur();
-  toast('Đang ghi… gõ phím rồi bấm "Dừng ghi"');
+  btn.textContent = '■ Stop recording'; btn.classList.add('rec'); btn.blur();
+  toast('Recording… type, then click "Stop recording"');
 }
 async function saveMacros(){
-  try { S.busy = true; renderNav(); await writeMacros(draft); toast('Đã lưu macro vào bàn phím'); } catch (e){ toast(e.message, true); }
+  try { S.busy = true; renderNav(); await writeMacros(draft); toast('Macros saved to the keyboard'); } catch (e){ toast(e.message, true); }
   S.busy = false; progress(null); renderNav(); renderConfig();
 }
 async function resetMacros(){
-  if (!confirm('Xóa toàn bộ macro trong bàn phím?')) return;
-  try { await S.t.send([CMD.MACRO_RESET]); await readMacros(); draft = [...S.macros]; renderConfig(); toast('Đã xóa macro'); } catch (e){ toast(e.message, true); }
+  if (!confirm('Clear all macros on the keyboard?')) return;
+  try { await S.t.send([CMD.MACRO_RESET]); await readMacros(); draft = [...S.macros]; renderConfig(); toast('Macros cleared'); } catch (e){ toast(e.message, true); }
 }
 
 /* ====================================================================
-   Đèn
+   Lighting
    ==================================================================== */
 const LIGHT_IDS = { rgblight: {bright:[0x80], effect:[0x81], speed:[0x82], color:[0x83]}, backlight: {bright:[0x09], effect:[0x0A]} };
 function lightIds(){ if (!S.light) return null; if (S.light.mode === 'v12'){ const c = S.light.ch; return {bright:[c,1], effect:[c,2], speed:[c,3], color:[c,4]}; } return LIGHT_IDS[S.light.mode]; }
@@ -998,53 +998,53 @@ function hsvToHex(h, s, v=255){ h = h/255*360; s /= 255; v /= 255; const f = n =
 function hexToHs(c){ const r = parseInt(c.slice(1,3),16)/255, g = parseInt(c.slice(3,5),16)/255, b = parseInt(c.slice(5,7),16)/255; const mx = Math.max(r,g,b), mn = Math.min(r,g,b), d = mx - mn; let h = 0; if (d){ if (mx === r) h = ((g-b)/d) % 6; else if (mx === g) h = (b-r)/d + 2; else h = (r-g)/d + 4; } h = (h*60 + 360) % 360; return [Math.round(h/360*255), Math.round((mx ? d/mx : 0)*255)]; }
 function renderLightPane(){
   const page = el('div', {class:'page'});
-  const shortcut = el('div', {class:'card'}, el('h3', {}, 'Chỉnh đèn bằng phím tắt'),
-    el('p', {}, 'Trên AULA F65, đèn được điều khiển bằng tổ hợp Fn ngay trên bàn phím:'),
+  const shortcut = el('div', {class:'card'}, el('h3', {}, 'Lighting shortcuts'),
+    el('p', {}, 'On the AULA F65, lighting is controlled with Fn shortcuts on the keyboard itself:'),
     el('div', {class:'kv'},
-      el('div', {}, 'Fn + \\'), el('div', {}, 'Đổi hiệu ứng đèn'),
-      el('div', {}, 'Fn + Tab'), el('div', {}, 'Đổi màu đèn'),
-      el('div', {}, 'Fn + ↑ / ↓'), el('div', {}, 'Tăng / giảm độ sáng'),
-      el('div', {}, 'Fn + → / ←'), el('div', {}, 'Tăng / giảm tốc độ hiệu ứng'),
-      el('div', {}, 'Fn + R Shift'), el('div', {}, 'Hiệu ứng đèn cạnh'),
-      el('div', {}, 'Fn + , . /'), el('div', {}, 'Tốc độ / độ sáng / màu đèn cạnh')),
-    el('p', {style:'margin:12px 0 0'}, 'Muốn đặt các chức năng này vào phím khác: vào Gán phím → Chức năng AULA.'));
+      el('div', {}, 'Fn + \\'), el('div', {}, 'Cycle lighting effect'),
+      el('div', {}, 'Fn + Tab'), el('div', {}, 'Cycle lighting color'),
+      el('div', {}, 'Fn + ↑ / ↓'), el('div', {}, 'Brightness up / down'),
+      el('div', {}, 'Fn + → / ←'), el('div', {}, 'Effect speed up / down'),
+      el('div', {}, 'Fn + R Shift'), el('div', {}, 'Side light effect'),
+      el('div', {}, 'Fn + , . /'), el('div', {}, 'Side light speed / brightness / color')),
+    el('p', {style:'margin:12px 0 0'}, 'To put these functions on other keys, go to Keymap → AULA functions.'));
   if (!S.light){
-    page.append(el('div', {class:'cards'}, el('div', {class:'card'}, el('h3', {}, 'Không chỉnh trực tiếp được'),
-      el('p', {}, connected() ? 'Firmware của bàn phím này không cho phép chỉnh đèn từ máy tính qua giao thức VIA (đã kiểm thử trên AULA F65 thật).' : 'Kết nối bàn phím để xem.')), shortcut));
+    page.append(el('div', {class:'cards'}, el('div', {class:'card'}, el('h3', {}, 'Not adjustable from here'),
+      el('p', {}, connected() ? 'The firmware of this keyboard does not allow lighting changes from the computer over VIA (verified on a real AULA F65).' : 'Connect a keyboard to see this.')), shortcut));
     return page;
   }
-  const v = S.light.vals, card = el('div', {class:'card'}, el('h3', {}, 'Đèn nền'), el('p', {}, 'Thay đổi áp dụng ngay. Bấm "Lưu" để giữ sau khi rút cáp.'));
+  const v = S.light.vals, card = el('div', {class:'card'}, el('h3', {}, 'Backlight'), el('p', {}, 'Changes apply immediately. Click "Save" to keep them after unplugging.'));
   const slider = (k, label, max) => {
     if (!v[k]) return;
     const out = el('b', {}, String(v[k][0])), r = el('input', {type:'range', min:0, max, value: v[k][0], style:'width:100%'});
     r.addEventListener('input', () => out.textContent = r.value); r.addEventListener('change', () => lightSet(k, [+r.value]));
     card.append(el('div', {style:'margin-bottom:12px'}, el('div', {class:'note', style:'margin:0 0 4px'}, label, ' ', out), r));
   };
-  slider('bright', 'Độ sáng', 255);
+  slider('bright', 'Brightness', 255);
   if (v.effect){ const n = el('input', {type:'number', min:0, max:255, value: v.effect[0], style:'width:80px'}); n.addEventListener('change', () => lightSet('effect', [+n.value]));
-    card.append(el('div', {class:'row', style:'margin-bottom:12px'}, el('span', {class:'note', style:'margin:0'}, 'Hiệu ứng'), el('button', {class:'btn', onclick: () => { n.value = Math.max(0, +n.value - 1); lightSet('effect', [+n.value]); }}, '◀'), n, el('button', {class:'btn', onclick: () => { n.value = +n.value + 1; lightSet('effect', [+n.value]); }}, '▶'))); }
-  slider('speed', 'Tốc độ', 255);
+    card.append(el('div', {class:'row', style:'margin-bottom:12px'}, el('span', {class:'note', style:'margin:0'}, 'Effect'), el('button', {class:'btn', onclick: () => { n.value = Math.max(0, +n.value - 1); lightSet('effect', [+n.value]); }}, '◀'), n, el('button', {class:'btn', onclick: () => { n.value = +n.value + 1; lightSet('effect', [+n.value]); }}, '▶'))); }
+  slider('speed', 'Speed', 255);
   if (v.color){ const c = el('input', {type:'color', value: hsvToHex(v.color[0], v.color[1])}); c.addEventListener('change', () => lightSet('color', hexToHs(c.value)));
-    card.append(el('div', {class:'row', style:'margin-bottom:12px'}, el('span', {class:'note', style:'margin:0'}, 'Màu'), c)); }
-  card.append(el('button', {class:'btn primary', onclick: async () => { try { await S.t.send(S.light.mode === 'v12' ? [CMD.LIGHT_SAVE, S.light.ch] : [CMD.LIGHT_SAVE]); toast('Đã lưu cài đặt đèn'); } catch (e){ toast(e.message, true); } }}, 'Lưu'));
+    card.append(el('div', {class:'row', style:'margin-bottom:12px'}, el('span', {class:'note', style:'margin:0'}, 'Color'), c)); }
+  card.append(el('button', {class:'btn primary', onclick: async () => { try { await S.t.send(S.light.mode === 'v12' ? [CMD.LIGHT_SAVE, S.light.ch] : [CMD.LIGHT_SAVE]); toast('Lighting settings saved'); } catch (e){ toast(e.message, true); } }}, 'Save'));
   page.append(el('div', {class:'cards'}, card, shortcut));
   return page;
 }
 
 /* ====================================================================
-   Lưu & Tải
+   Save + Load
    ==================================================================== */
 function renderSavePane(){
   const page = el('div', {class:'page'});
   const fi = el('input', {type:'file', accept:'.json,application/json', hidden: true});
   fi.onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importBackup(f); };
   page.append(el('div', {class:'cards'},
-    el('div', {class:'card'}, el('h3', {}, 'Lưu cấu hình'), el('p', {}, 'Xuất toàn bộ sơ đồ phím (cả 4 lớp) và macro ra file .json. Nên lưu trước khi chỉnh sửa.'),
-      el('button', {class:'btn primary', disabled: !connected(), onclick: exportBackup}, icon('save', 15), 'Lưu ra file')),
-    el('div', {class:'card'}, el('h3', {}, 'Tải cấu hình'), el('p', {}, 'Nạp lại một file đã lưu và ghi vào bàn phím.'),
-      el('button', {class:'btn', disabled: !connected(), onclick: () => fi.click()}, 'Chọn file…'), fi),
-    el('div', {class:'card'}, el('h3', {}, 'Về mặc định'), el('p', {}, 'Đặt lại toàn bộ sơ đồ phím về cài đặt gốc của nhà sản xuất. Macro không bị ảnh hưởng.'),
-      el('button', {class:'btn danger', disabled: !connected(), onclick: resetKeymap}, 'Đặt lại sơ đồ phím'))));
+    el('div', {class:'card'}, el('h3', {}, 'Save configuration'), el('p', {}, 'Export the full keymap (all 4 layers) and macros to a .json file. Do this before making changes.'),
+      el('button', {class:'btn primary', disabled: !connected(), onclick: exportBackup}, icon('save', 15), 'Save to file')),
+    el('div', {class:'card'}, el('h3', {}, 'Load configuration'), el('p', {}, 'Load a saved file and write it to the keyboard.'),
+      el('button', {class:'btn', disabled: !connected(), onclick: () => fi.click()}, 'Choose file…'), fi),
+    el('div', {class:'card'}, el('h3', {}, 'Factory defaults'), el('p', {}, 'Reset the whole keymap to the manufacturer defaults. Macros are not affected.'),
+      el('button', {class:'btn danger', disabled: !connected(), onclick: resetKeymap}, 'Reset keymap'))));
   return page;
 }
 async function exportBackup(){
@@ -1055,9 +1055,9 @@ async function exportBackup(){
     layers, macros: S.macros.slice(0, S.macroCount)});
 }
 async function importBackup(file){
-  let data; try { data = JSON.parse(await file.text()); } catch { return toast('File không phải JSON hợp lệ', true); }
-  if (!Array.isArray(data.layers)) return toast('File sao lưu không đúng định dạng', true);
-  if (data.keycodeVersion && data.keycodeVersion !== S.KC.ver && !confirm(`File được tạo với bảng mã v${data.keycodeVersion}, bàn phím đang dùng v${S.KC.ver}. Vẫn tải (dùng tên phím để chuyển đổi)?`)) return;
+  let data; try { data = JSON.parse(await file.text()); } catch { return toast('Not a valid JSON file', true); }
+  if (!Array.isArray(data.layers)) return toast('The backup file has the wrong format', true);
+  if (data.keycodeVersion && data.keycodeVersion !== S.KC.ver && !confirm(`This file was made with keycode table v${data.keycodeVersion}; the keyboard uses v${S.KC.ver}. Load it anyway (converting by key name)?`)) return;
   const C = S.def.matrix.cols; let n = 0, changed = 0, bad = 0; const total = Math.min(data.layers.length, S.layers) * S.keys.length;
   S.busy = true; renderNav();
   try {
@@ -1072,62 +1072,62 @@ async function importBackup(file){
       }
     }
     if (Array.isArray(data.macros) && S.macroCount){ await writeMacros(Array.from({length: S.macroCount}, (_, i) => data.macros[i] || '')); draft = null; }
-    toast(`Đã tải cấu hình: ${changed} phím thay đổi${bad ? `, ${bad} phím bỏ qua` : ''}`);
+    toast(`Configuration loaded: ${changed} keys changed${bad ? `, ${bad} keys skipped` : ''}`);
   } catch (e){ toast(e.message, true); }
   S.busy = false; progress(null); renderAll();
 }
 async function resetKeymap(){
-  if (!confirm('Đặt lại toàn bộ sơ đồ phím (cả 4 lớp) về mặc định của nhà sản xuất?')) return;
-  try { await S.t.send([CMD.KM_RESET]); await readKeymap(); progress(null); S.sel = null; renderAll(); toast('Đã đặt lại sơ đồ phím'); } catch (e){ toast(e.message, true); }
+  if (!confirm('Reset the whole keymap (all 4 layers) to the manufacturer defaults?')) return;
+  try { await S.t.send([CMD.KM_RESET]); await readKeymap(); progress(null); S.sel = null; renderAll(); toast('Keymap reset'); } catch (e){ toast(e.message, true); }
 }
 
 /* ====================================================================
-   Trang Cài đặt
+   Settings page
    ==================================================================== */
 function renderSettings(){
   const page = el('div', {class:'page'});
   const info = el('div', {class:'kv'});
-  const rows = S.t ? [['Thiết bị', S.t.name], ['VID : PID', `0x${hex(S.t.vid,4)} : 0x${hex(S.t.pid,4)}`], ['Giao thức VIA', `v${S.proto}`],
-    ['Bảng mã keycode', `v${S.KC.ver}${S.KC.T.USER === 0x7F00 ? ' (phím AULA 0x7F00+)' : ''}`], ['Số lớp', S.layers],
-    ['Macro', S.macroCount ? `${S.macroCount} macro, ${S.macroSize} byte` : 'không hỗ trợ'], ['Đèn qua VIA', S.light ? S.light.mode : 'không']]
-    : [['Trạng thái', 'Chưa kết nối']];
+  const rows = S.t ? [['Device', S.t.name], ['VID : PID', `0x${hex(S.t.vid,4)} : 0x${hex(S.t.pid,4)}`], ['VIA protocol', `v${S.proto}`],
+    ['Keycode table', `v${S.KC.ver}${S.KC.T.USER === 0x7F00 ? ' (AULA keys 0x7F00+)' : ''}`], ['Layers', S.layers],
+    ['Macro', S.macroCount ? `${S.macroCount} macros, ${S.macroSize} bytes` : 'not supported'], ['Lighting via VIA', S.light ? S.light.mode : 'no']]
+    : [['Status', 'Not connected']];
   for (const [k, v] of rows) info.append(el('div', {}, k), el('div', {}, String(v)));
   const sel = el('select');
-  for (const [v, t] of [['auto','Tự động (khuyên dùng)'],['10','VIA cũ (v10)'],['12','VIA mới (v12)']]) sel.append(el('option', {value: v, selected: S.kcPref === v}, t));
+  for (const [v, t] of [['auto','Automatic (recommended)'],['10','Old VIA (v10)'],['12','New VIA (v12)']]) sel.append(el('option', {value: v, selected: S.kcPref === v}, t));
   sel.onchange = () => { S.kcPref = sel.value; lsSet('aula.kcVer', S.kcPref); rebuildKC(); renderAll(); };
   const fd = el('input', {type:'file', accept:'.json,application/json', hidden: true});
   fd.onchange = async e => {
     const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-    try { setDef(JSON.parse(await f.text()), true); S.sel = null; if (S.t) await useTransport(S.t); else renderAll(); toast('Đã nạp định nghĩa ' + S.def.name); } catch (err){ toast(err.message, true); }
+    try { setDef(JSON.parse(await f.text()), true); S.sel = null; if (S.t) await useTransport(S.t); else renderAll(); toast('Loaded definition ' + S.def.name); } catch (err){ toast(err.message, true); }
   };
   page.append(el('div', {class:'cards'},
-    el('div', {class:'card'}, el('h3', {}, 'Thiết bị'), el('p', {}, S.status || 'Kết nối bàn phím để xem thông tin.'), info,
+    el('div', {class:'card'}, el('h3', {}, 'Device'), el('p', {}, S.status || 'Connect a keyboard to see its details.'), info,
       el('div', {class:'row', style:'margin-top:14px'},
-        S.t ? el('button', {class:'btn', onclick: () => disconnect()}, 'Ngắt kết nối') : el('button', {class:'btn primary', disabled: !('hid' in navigator), onclick: () => connect(false)}, 'Kết nối'),
-        el('button', {class:'btn ghost', disabled: !('hid' in navigator), title:'Dùng khi không thấy bàn phím trong danh sách', onclick: () => connect(true)}, 'Hiện mọi thiết bị HID'),
-        el('button', {class:'btn ghost', onclick: () => useTransport(new MockTransport(S.def))}, 'Chế độ thử'))),
-    el('div', {class:'card'}, el('h3', {}, 'Bảng mã keycode'), el('p', {}, 'Chỉ đổi khi tên phím hiển thị sai (ví dụ phím Fn hiện thành mã hex lạ).'), sel),
-    el('div', {class:'card'}, el('h3', {}, 'File định nghĩa bàn phím'),
-      el('p', {}, `Đang dùng: ${S.def.name} — ${S.keys.length} phím, ${(S.def.customKeycodes||[]).length} chức năng riêng.`),
-      el('div', {class:'row'}, el('button', {class:'btn', onclick: () => fd.click()}, 'Nạp file VIA JSON…'),
-        el('button', {class:'btn ghost', onclick: async () => { setDef(DEFAULT_DEF, false); S.sel = null; if (S.t) await useTransport(S.t); else renderAll(); toast('Đang dùng định nghĩa AULA F65 có sẵn'); }}, 'Dùng AULA F65 mặc định'), fd))));
+        S.t ? el('button', {class:'btn', onclick: () => disconnect()}, 'Disconnect') : el('button', {class:'btn primary', disabled: !('hid' in navigator), onclick: () => connect(false)}, 'Connect'),
+        el('button', {class:'btn ghost', disabled: !('hid' in navigator), title:'Use this if your keyboard is not in the list', onclick: () => connect(true)}, 'Show all HID devices'),
+        el('button', {class:'btn ghost', onclick: () => useTransport(new MockTransport(S.def))}, 'Demo mode'))),
+    el('div', {class:'card'}, el('h3', {}, 'Keycode table'), el('p', {}, 'Only change this if key names look wrong (e.g. the Fn key shows a strange hex code).'), sel),
+    el('div', {class:'card'}, el('h3', {}, 'Keyboard definition file'),
+      el('p', {}, `In use: ${S.def.name} — ${S.keys.length} keys, ${(S.def.customKeycodes||[]).length} custom functions.`),
+      el('div', {class:'row'}, el('button', {class:'btn', onclick: () => fd.click()}, 'Load VIA JSON file…'),
+        el('button', {class:'btn ghost', onclick: async () => { setDef(DEFAULT_DEF, false); S.sel = null; if (S.t) await useTransport(S.t); else renderAll(); toast('Using the built-in AULA F65 definition'); }}, 'Use built-in AULA F65'), fd))));
   return page;
 }
 
 /* ====================================================================
-   Kiểm tra phím
+   Key tester
    ==================================================================== */
 let testTimer = null, testMatrix = false, testHint = '';
 function renderTestPage(){
   const page = el('div', {class:'page'});
-  page.append(el('div', {class:'row'}, el('button', {class:'btn', onclick: () => { for (const k of S.keys) k.el?.classList.remove('was','hit'); $('#testLast').textContent = ''; }}, 'Xóa kết quả'),
+  page.append(el('div', {class:'row'}, el('button', {class:'btn', onclick: () => { for (const k of S.keys) k.el?.classList.remove('was','hit'); $('#testLast').textContent = ''; }}, 'Clear results'),
     el('span', {class:'note', id:'testLast', style:'margin:0'})),
-    el('p', {class:'note', style:'margin-top:12px'}, 'Phím đang nhấn có màu xanh đậm, phím đã nhấn có màu xanh nhạt. Phím Fn và các phím chức năng AULA không gửi tín hiệu tới máy tính nên sẽ không sáng.'));
+    el('p', {class:'note', style:'margin-top:12px'}, 'Keys being pressed turn dark green; keys already tested turn light green. Fn and the AULA function keys send nothing to the computer, so they will not light up.'));
   return page;
 }
 function startTester(){
   stopTester(); testMatrix = false;
-  testHint = 'Nhấn từng phím trên bàn phím để kiểm tra.';
+  testHint = 'Press each key on the keyboard to test it.';
   if (!S.t || !S.keymap || S.profile.noMatrix || S.t.mock){ renderSel(); return; }
   const bpr = Math.ceil(S.def.matrix.cols / 8);
   testMatrix = true;
@@ -1164,39 +1164,37 @@ function keysFromEvent(e){
 document.addEventListener('keydown', e => {
   if (S.page !== 'test' || recording || e.target.closest?.('input,textarea,select')) return;
   e.preventDefault();
-  const last = $('#testLast'); if (last) last.textContent = `Phím vừa nhấn: ${e.code}`;
+  const last = $('#testLast'); if (last) last.textContent = `Last key: ${e.code}`;
   if (testMatrix) return;
   const ks = keysFromEvent(e);
   for (const k of ks) k.el.classList.add('hit','was');
-  // macOS chỉ báo keyup của Caps Lock khi tắt khóa → tự tắt đèn sau một lúc
+  // macOS only sends a Caps Lock keyup when the lock turns off → clear the highlight after a moment
   if (e.code === 'CapsLock') setTimeout(() => ks.forEach(k => k.el.classList.remove('hit')), 250);
 });
 document.addEventListener('keyup', e => {
   if (S.page !== 'test' || testMatrix) return;
-  // macOS: khi giữ Cmd, các phím khác không có keyup → nhả Cmd thì tắt hết
+  // macOS: no keyup for other keys while Cmd is held → clear everything when Cmd is released
   if (e.code === 'MetaLeft' || e.code === 'MetaRight'){ for (const k of S.keys) k.el?.classList.remove('hit'); return; }
   for (const k of keysFromEvent(e)) k.el.classList.remove('hit');
 });
 window.addEventListener('blur', () => { for (const k of S.keys) k.el?.classList.remove('hit'); });
 
 /* ====================================================================
-   Khởi động
+   Startup
    ==================================================================== */
 function renderAll(){ renderNav(); renderStage(); renderConfig(); }
 let rT; window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(renderStage, 120); });
 
 (async function init(){
-  /* Ngôn ngữ: liên kết sang bản tiếng Anh; trên web, tự chuyển nếu trình duyệt không dùng tiếng Việt */
-  const altLang = (() => { const f = location.pathname.split('/').pop(); return (!f || f === 'index.html') ? 'en.html' : f.replace(/\.html$/i, '-en.html'); })();
-  const lang = $('#langLink'); lang.href = altLang; lang.onclick = () => lsSet('aula.lang', 'en');
-  const pref = lsGet('aula.lang');
-  if (location.protocol !== 'file:' && (pref === 'en' || (!pref && !(navigator.languages || [navigator.language]).some(l => /^vi/i.test(l))))){ location.replace(altLang); return; }
+  /* Language: link back to the Vietnamese version */
+  const altLang = (() => { const f = location.pathname.split('/').pop(); return f === 'en.html' ? './' : f.replace(/-en\.html$/i, '.html'); })();
+  const lang = $('#langLink'); lang.href = altLang; lang.onclick = () => lsSet('aula.lang', 'vi');
   let def = DEFAULT_DEF;
   const saved = lsGet('aula.def'); if (saved){ try { def = JSON.parse(saved); } catch {} }
   try { setDef(def); } catch { setDef(DEFAULT_DEF); }
   renderAll();
   if (!('hid' in navigator)) return;
-  navigator.hid.addEventListener('disconnect', e => { if (S.t && S.t.dev === e.device){ toast('Bàn phím đã bị rút ra', true); disconnect(); } });
+  navigator.hid.addEventListener('disconnect', e => { if (S.t && S.t.dev === e.device){ toast('The keyboard was unplugged', true); disconnect(); } });
   try {
     const vid = toInt(S.def.vendorId);
     const devs = (await navigator.hid.getDevices()).filter(d => d.vendorId === vid && d.collections.some(c => c.usagePage === 0xFF60));
