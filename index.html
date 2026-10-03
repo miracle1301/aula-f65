@@ -1,0 +1,1201 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AULA F65 Configurator</title>
+<style>
+:root{
+  --bg:#17181c; --bg2:#202127; --panel:#25262c; --panel2:#2d2e35; --panel3:#36373f; --line:#3b3c44;
+  --text:#ececee; --muted:#9a9ba4; --accent:#e27c62; --accent2:#f29a82; --ok:#3ecf8e; --err:#f05d6c;
+  --case:#2b2c32; --case-edge:#111215;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:14px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;display:flex;flex-direction:column;min-height:100vh}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+svg{flex:none}
+
+/* ---------- Thanh điều hướng ---------- */
+.nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:56px;padding:0 16px;background:var(--bg);border-bottom:1px solid #26272d}
+.brand{font-weight:700;letter-spacing:.5px;font-size:15px;display:flex;align-items:center;gap:8px}
+.brand b{color:var(--accent)}
+.navtabs{display:flex;gap:4px}
+.navtabs button{display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--muted);padding:8px 16px;border-radius:999px;font-weight:600;font-size:13px;letter-spacing:.3px;text-transform:uppercase}
+.navtabs button:hover{color:var(--text)}
+.navtabs button.on{color:var(--accent);background:rgba(226,124,98,.1)}
+.devchip{justify-self:end;display:flex;align-items:center;gap:10px}
+.chip{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 6px 5px 12px;font-size:13px}
+.dot{width:8px;height:8px;border-radius:50%;background:#666}
+.dot.ok{background:var(--ok);box-shadow:0 0 8px var(--ok)} .dot.busy{background:#f5a524} .dot.err{background:var(--err)}
+.iconbtn{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:none;background:var(--panel3);color:var(--muted)}
+.iconbtn:hover{color:var(--text);background:#44454e}
+.btn{background:var(--panel3);border:1px solid #45464f;border-radius:8px;padding:8px 14px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{background:#41424b}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:#d06a51}
+.btn.ghost{background:none}
+.btn.danger{color:#ff8f9a;border-color:#5b3036;background:#2e2226}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ---------- Khu bàn phím ---------- */
+#stage{position:relative;background:radial-gradient(ellipse at 50% 30%,#2a2b32 0%,var(--bg) 70%);padding:22px 16px 18px;display:flex;flex-direction:column;align-items:center}
+.layerbar{display:flex;align-items:center;gap:6px;margin-bottom:16px;flex-wrap:wrap;justify-content:center}
+.layerbar .lbl{font-size:12px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-right:6px;text-transform:uppercase}
+.layerbar button{min-width:36px;height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-weight:600;font-size:13px}
+.layerbar button:hover{color:var(--text)}
+.layerbar button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.case{position:relative;background:linear-gradient(180deg,#303138,var(--case));border-radius:16px;padding:14px;box-shadow:0 18px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06),0 0 0 1px var(--case-edge)}
+#kb{position:relative}
+.key{position:absolute;border-radius:6px;cursor:pointer;transition:transform .08s}
+.key .cap{position:absolute;left:4px;right:4px;top:3px;bottom:7px;border-radius:5px;display:flex;align-items:center;justify-content:center;text-align:center;padding:2px;overflow:hidden}
+.key .lbl{font-size:12px;font-weight:600;line-height:1.08;white-space:pre-line;word-break:break-word}
+.key.sm .lbl{font-size:10.5px} .key.xs .lbl{font-size:9px}
+.key:hover{transform:translateY(-1px)}
+.key.alpha{background:#c4c4c6} .key.alpha .cap{background:linear-gradient(#f1f1f2,#e2e2e4);color:#3b3b40}
+.key.mod{background:#808189} .key.mod .cap{background:linear-gradient(#acadb4,#9c9da5);color:#202024}
+.key.accent{background:#b8533c} .key.accent .cap{background:linear-gradient(#ef8a70,#e27c62);color:#fff}
+.key .cap.trns{opacity:.55}
+.key .cap.custom .lbl{color:#c2462a} .key.accent .cap.custom .lbl{color:#fff}
+.key .cap.layer .lbl{color:#2b63b8}
+.key.sel{background:#3d6fd1;z-index:2;animation:ring 1.1s ease-in-out infinite}
+.key.sel .cap{background:linear-gradient(#7aa5ff,#5b8cf0)!important;color:#fff}
+.key.sel .cap .lbl{color:#fff!important}
+@keyframes ring{0%,100%{box-shadow:0 0 0 2px #fff,0 0 10px 2px rgba(91,140,240,.7)}50%{box-shadow:0 0 0 2px #fff,0 0 22px 6px rgba(91,140,240,.9)}}
+.key.was{background:#2c8a5c} .key.was .cap{background:#7fd9ab;color:#0d2a1b}
+.key.hit{background:#1e7a4d} .key.hit .cap{background:var(--ok);color:#06210f}
+.dim .key{pointer-events:none}
+.dim .case{filter:saturate(.4) brightness(.55)}
+.overlay{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.overlay .card{pointer-events:auto;background:rgba(30,31,36,.94);border:1px solid var(--line);border-radius:14px;padding:22px 26px;text-align:center;max-width:420px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.overlay h2{margin:0 0 6px;font-size:18px}
+.overlay p{margin:0 0 16px;color:var(--muted)}
+.overlay .row{justify-content:center}
+.selinfo{margin-top:14px;min-height:22px;color:var(--muted);font-size:13px;text-align:center}
+.selinfo b{color:var(--text)}
+.selinfo code{background:var(--panel2);padding:1px 6px;border-radius:4px}
+.progress{position:absolute;left:0;right:0;top:0;height:3px;display:none}
+.progress div{height:100%;background:var(--accent);width:0;transition:width .1s}
+
+/* ---------- Khu cấu hình phía dưới ---------- */
+#config{flex:1;display:grid;grid-template-columns:200px 1fr;background:var(--panel);border-top:1px solid var(--line);min-height:330px}
+.menu{background:var(--bg2);border-right:1px solid var(--line);padding:10px 0}
+.menu button{display:flex;align-items:center;gap:12px;width:100%;padding:12px 20px;background:none;border:none;border-left:3px solid transparent;color:var(--muted);font-weight:600;font-size:14px;text-align:left}
+.menu button:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.menu button.on{color:var(--text);border-left-color:var(--accent);background:rgba(226,124,98,.08)}
+.menu button.on svg{color:var(--accent)}
+.content{min-width:0;display:flex}
+.cats{width:180px;flex:none;border-right:1px solid var(--line);padding:8px 0;overflow-y:auto}
+.cats button{display:block;width:100%;padding:9px 18px;background:none;border:none;color:var(--muted);text-align:left;font-size:13px;font-weight:600}
+.cats button:hover{color:var(--text)}
+.cats button.on{color:var(--accent)}
+.grid-area{flex:1;min-width:0;padding:14px 18px 24px;overflow-y:auto;max-height:46vh}
+.sec-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:12px 0 8px}
+.sec-title:first-child{margin-top:0}
+.kgrid{display:flex;flex-wrap:wrap;gap:6px}
+.kc{width:58px;height:58px;border-radius:8px;border:1px solid #44454e;background:linear-gradient(#3b3c44,#33343b);color:var(--text);font-size:11.5px;font-weight:600;line-height:1.1;white-space:pre-line;padding:3px;display:grid;place-items:center;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+.kc:hover{border-color:var(--accent);color:#fff;background:#45464f}
+.kc.w2{width:122px}
+.kc.custom{color:#ffb39f}
+.kc.layer{color:#9cc2ff}
+.note{color:var(--muted);font-size:13px;margin:0 0 12px;max-width:760px}
+.page{flex:1;padding:18px 22px 30px;overflow-y:auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card h3{margin:0 0 6px;font-size:15px}
+.card p{margin:0 0 12px;color:var(--muted);font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input[type=text],input[type=number],textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;outline:none}
+select:focus,input:focus,textarea:focus{border-color:var(--accent)}
+textarea{width:100%;resize:vertical;font-family:ui-monospace,Consolas,monospace;font-size:13px;min-height:110px}
+label.chk{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:13px}
+.kv div:nth-child(odd){color:var(--muted)}
+
+/* macro */
+.mchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.mchips button{position:relative;width:52px;height:40px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font-weight:700}
+.mchips button.on{border-color:var(--accent);color:#fff;background:#3a2c29}
+.mchips button.has::after{content:'';position:absolute;right:5px;top:5px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.tokbar{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.tokbar button{font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--muted)}
+.tokbar button:hover{color:var(--text);border-color:#55565f}
+.meter{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin:6px 0 2px;max-width:340px}
+.meter div{height:100%;background:var(--accent)}
+.rec{color:#fff!important;background:#c23b3b!important;border-color:#c23b3b!important}
+code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var(--bg);padding:1px 5px;border-radius:4px}
+
+.foot{text-align:center;color:var(--muted);font-size:12px;padding:10px 16px 14px;background:var(--panel);border-top:1px solid var(--line)}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(10px);background:#2d2e35;border:1px solid var(--line);padding:10px 18px;border-radius:10px;opacity:0;transition:.2s;pointer-events:none;max-width:90vw;z-index:9;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+#toast.show{opacity:1;transform:translateX(-50%)}
+#toast.err{border-color:var(--err)}
+
+@media (max-width:820px){
+  .nav{grid-template-columns:1fr auto;height:auto;padding:8px 12px;gap:6px}
+  .navtabs{grid-column:1/-1;order:3;justify-content:center}
+  .navtabs button{padding:6px 10px}
+  .navtabs button span{display:none}
+  #config{grid-template-columns:1fr}
+  .menu{display:flex;overflow-x:auto;padding:0;border-right:none;border-bottom:1px solid var(--line)}
+  .menu button{width:auto;border-left:none;border-bottom:3px solid transparent;padding:10px 14px;white-space:nowrap}
+  .menu button.on{border-bottom-color:var(--accent)}
+  .content{flex-direction:column}
+  .cats{width:auto;display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line);padding:0}
+  .cats button{white-space:nowrap;width:auto}
+  .grid-area{max-height:none}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand"><b>AULA</b> F65 Configurator</div>
+  <div class="navtabs" id="navtabs"></div>
+  <div class="devchip" id="devchip"></div>
+</nav>
+
+<section id="stage">
+  <div class="progress" id="prog"><div></div></div>
+  <div class="layerbar" id="layerbar"></div>
+  <div class="case"><div id="kb"></div></div>
+  <div class="selinfo" id="selinfo"></div>
+  <div class="overlay" id="overlay" hidden></div>
+</section>
+
+<section id="config"></section>
+<footer class="foot">Công cụ cộng đồng, không chính thức — không liên kết với AULA hay Epomaker. Mọi dữ liệu chỉ trao đổi giữa trình duyệt và bàn phím của bạn, không gửi đi đâu.</footer>
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ====================================================================
+   Định nghĩa bàn phím (từ EPOMAKER_AULA_F65_V2.JSON)
+   ==================================================================== */
+const DEFAULT_DEF = {
+  name: "AULA F65", vendorId: "0x258A", productId: "0x010C",
+  customKeycodes: [
+    {name:"USB MODE",title:"Chuyển sang chế độ có dây USB",shortName:"USB"},
+    {name:"2.4G MODE",title:"Chuyển sang chế độ không dây 2.4G",shortName:"2.4G"},
+    {name:"Bluetooth 1",title:"Bluetooth kênh 1",shortName:"BT1"},
+    {name:"Bluetooth 2",title:"Bluetooth kênh 2",shortName:"BT2"},
+    {name:"Bluetooth 3",title:"Bluetooth kênh 3",shortName:"BT3"},
+    {name:"Lock Win",title:"Khóa phím Windows",shortName:"Khóa\nWin"},
+    {name:"RGB Mode Cycle",title:"Đổi hiệu ứng đèn",shortName:"Hiệu\nứng"},
+    {name:"RGB Color Cycle",title:"Đổi màu đèn",shortName:"Màu\nđèn"},
+    {name:"Brigth Inc",title:"Tăng độ sáng đèn",shortName:"Sáng +"},
+    {name:"Brigth Dec",title:"Giảm độ sáng đèn",shortName:"Sáng −"},
+    {name:"Speed Inc",title:"Tăng tốc độ hiệu ứng",shortName:"Tốc +"},
+    {name:"Speed Dec",title:"Giảm tốc độ hiệu ứng",shortName:"Tốc −"},
+    {name:"Game Mode",title:"Chế độ chơi game",shortName:"Game"},
+    {name:"Game Mode Record",title:"Ghi đèn chế độ game",shortName:"REC"},
+    {name:"RGB OFF/ON",title:"Bật/tắt đèn",shortName:"Đèn\nbật/tắt"},
+    {name:"Keyboard Reset",title:"Khôi phục cài đặt gốc bàn phím (giữ 3 giây)",shortName:"Reset"},
+    {name:"EMI Test",title:"Kiểm tra EMI (dùng cho nhà sản xuất)",shortName:"EMI"},
+    {name:"Battery View",title:"Xem mức pin",shortName:"Pin"},
+    {name:"WIN MAC",title:"Chuyển đổi Win/Mac",shortName:"Win/\nMac"},
+    {name:"WIN",title:"Chế độ Windows",shortName:"Win\nmode"},
+    {name:"MAC",title:"Chế độ Mac",shortName:"Mac\nmode"},
+    {name:"NKRO Mode",title:"Bật/tắt N-key rollover",shortName:"NKRO"},
+    {name:"White Mode",title:"Chế độ đèn trắng",shortName:"Đèn\ntrắng"},
+    {name:"Swap ASDW",title:"Đổi WASD với phím mũi tên",shortName:"WASD\n⇄ ↑↓"},
+    {name:"Side Mode",title:"Hiệu ứng đèn cạnh",shortName:"Cạnh\nhiệu ứng"},
+    {name:"Side Color",title:"Màu đèn cạnh",shortName:"Cạnh\nmàu"},
+    {name:"Side Bright",title:"Độ sáng đèn cạnh",shortName:"Cạnh\nsáng"},
+    {name:"Side Speed",title:"Tốc độ đèn cạnh",shortName:"Cạnh\ntốc độ"}
+  ],
+  matrix: {rows:6, cols:16},
+  layouts: {keymap: [
+    [],
+    [{w:1},"1,0",{w:1},"1,1",{w:1},"1,2",{w:1},"1,3",{w:1},"1,4",{w:1},"1,5",{w:1},"1,6",{w:1},"1,7",{w:1},"1,8",{w:1},"1,9",{w:1},"1,10",{w:1},"1,11",{w:1},"1,12",{w:2},"1,13",{w:1},"1,15"],
+    [{w:1.5},"2,0",{w:1},"2,1",{w:1},"2,2",{w:1},"2,3",{w:1},"2,4",{w:1},"2,5",{w:1},"2,6",{w:1},"2,7",{w:1},"2,8",{w:1},"2,9",{w:1},"2,10",{w:1},"2,11",{w:1},"2,12",{w:1.5},"2,13",{w:1},"2,15"],
+    [{w:1.8},"3,0",{w:1},"3,1",{w:1},"3,2",{w:1},"3,3",{w:1},"3,4",{w:1},"3,5",{w:1},"3,6",{w:1},"3,7",{w:1},"3,8",{w:1},"3,9",{w:1},"3,10",{w:1},"3,11",{w:2.2},"3,13",{w:1},"3,15"],
+    [{w:2.3},"4,0",{w:1},"4,1",{w:1},"4,2",{w:1},"4,3",{w:1},"4,4",{w:1},"4,5",{w:1},"4,6",{w:1},"4,7",{w:1},"4,8",{w:1},"4,9",{w:1},"4,10",{w:1.7},"4,13",{w:1},"4,14",{w:1},"4,15"],
+    [{w:1.3},"5,0",{w:1.3},"5,1",{w:1.3},"5,2",{w:6},"5,5",{w:1.4},"5,9",{w:1.4},"5,10",{w:1,x:0.3},"5,13",{w:1},"5,14",{w:1},"5,15"]
+  ]}
+};
+
+/* Sơ đồ phím gốc đọc từ AULA F65 thật (hàng 1–5 của 4 lớp) — dùng cho chế độ thử và khi chưa kết nối */
+const FACTORY_KEYMAP = (() => {
+  const base = [
+    '0029 001E 001F 0020 0021 0022 0023 0024 0025 0026 0027 002D 002E 002A 0000 004C',
+    '002B 0014 001A 0008 0015 0017 001C 0018 000C 0012 0013 002F 0030 0031 0000 004B',
+    '0039 0004 0016 0007 0009 000A 000B 000D 000E 000F 0033 0034 0031 0028 0000 004E',
+    '00E1 001D 001B 0006 0019 0005 0011 0010 0036 0037 0038 0087 0064 00E5 0052 004D'];
+  const fn = [
+    '0035 003A 003B 003C 003D 003E 003F 0040 0041 0042 0043 0044 0045 7F0F 0000 0049',
+    '7F07 7F01 7F17 7F02 7F03 7F04 0000 0046 0047 0048 0000 0000 0000 7F06 0000 00A9',
+    '0000 0000 7F13 7F14 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 00AA',
+    '0000 0000 0000 0000 0000 7F11 7F15 0065 7F1B 7F1A 7F19 0000 0000 7F18 7F08 004A'];
+  const L = [
+    [...base, '00E0 00E3 00E2 0000 0000 002C 0000 0000 0000 00E6 5221 0000 0000 0050 0051 004F'],
+    [...fn,   '0000 7F05 0000 0000 0000 0000 0000 0000 0000 00E4 5220 0000 0000 7F0B 7F09 7F0A'],
+    [...base, '00E0 00E2 00E3 0000 0000 002C 0000 0000 0000 00E6 5223 0000 0000 0050 0051 004F'],
+    [...fn,   '0000 0000 0000 0000 0000 0000 0000 0000 0000 00E4 5222 0000 0000 7F0B 7F09 7F0A']];
+  return L.map(rows => { const a = new Array(6*16).fill(0); rows.forEach((line, i) => line.split(' ').forEach((h, c) => a[(i+1)*16 + c] = parseInt(h, 16))); return a; });
+})();
+
+/* ====================================================================
+   Tiện ích
+   ==================================================================== */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const hex = (n, w=2) => n.toString(16).toUpperCase().padStart(w, '0');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const toInt = v => typeof v === 'number' ? v : parseInt(v, 16);
+function el(tag, attrs={}, ...kids){
+  const e = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)){
+    if (k === 'class') e.className = v;
+    else if (k === 'html') e.innerHTML = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) e.append(c);
+  return e;
+}
+const ICONS = {
+  configure: '<path d="M3 7h18v10H3z M6 10h1 M9 10h1 M12 10h1 M15 10h1 M18 10h0 M7 14h10"/>',
+  test: '<path d="M9 3h6 M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3 M7.5 15h9"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  keymap: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01 M11 10h.01 M15 10h.01 M8 14h8"/>',
+  macro: '<path d="M4 17l6-6-6-6 M12 19h8"/>',
+  light: '<path d="M9 18h6 M10 21h4 M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',
+  save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M17 21v-8H7v8 M7 3v5h8"/>',
+  plug: '<path d="M18.4 6.6a9 9 0 1 1-12.8 0 M12 2v10"/>',
+};
+const icon = (n, s=18) => { const sp = document.createElement('span'); sp.style.display = 'inline-flex'; sp.innerHTML = `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]}</svg>`; return sp; };
+let toastT;
+function toast(msg, err=false){
+  const t = $('#toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : '');
+  clearTimeout(toastT); toastT = setTimeout(() => t.className = '', err ? 5000 : 2400);
+}
+function progress(f){ const p = $('#prog'); if (f == null){ p.style.display = 'none'; return; } p.style.display = 'block'; p.firstElementChild.style.width = (f*100).toFixed(1) + '%'; }
+function lsGet(k){ try { return localStorage.getItem(k); } catch { return null; } }
+function lsSet(k,v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k,v); } catch {} }
+function download(name, obj){
+  const a = el('a', {href: URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2)], {type:'application/json'})), download: name});
+  document.body.append(a); a.click(); a.remove();
+}
+
+/* ====================================================================
+   Giao thức VIA qua raw HID (usage page 0xFF60, gói 32 byte)
+   ==================================================================== */
+const CMD = { PROTO:0x01, GET_KB:0x02, KM_SET:0x05, KM_GET:0x04, KM_RESET:0x06, LIGHT_SET:0x07, LIGHT_GET:0x08, LIGHT_SAVE:0x09,
+  MACRO_COUNT:0x0C, MACRO_SIZE:0x0D, MACRO_GET:0x0E, MACRO_SET:0x0F, MACRO_RESET:0x10, LAYERS:0x11, KM_GETBUF:0x12, UNHANDLED:0xFF };
+
+class HidTransport {
+  constructor(dev){
+    this.dev = dev; this.queue = Promise.resolve(); this.pending = null;
+    this.onReport = e => {
+      const d = new Uint8Array(e.data.buffer, e.data.byteOffset, e.data.byteLength);
+      const p = this.pending;
+      if (p && (d[0] === p.cmd || d[0] === CMD.UNHANDLED)){ this.pending = null; clearTimeout(p.timer); p.resolve(Uint8Array.from(d)); }
+    };
+    dev.addEventListener('inputreport', this.onReport);
+  }
+  get name(){ return this.dev.productName || 'Thiết bị HID'; }
+  get vid(){ return this.dev.vendorId; }
+  get pid(){ return this.dev.productId; }
+  async open(){ if (!this.dev.opened) await this.dev.open(); }
+  async close(){ this.dev.removeEventListener('inputreport', this.onReport); try { await this.dev.close(); } catch {} }
+  send(bytes){
+    const run = () => new Promise((resolve, reject) => {
+      const buf = new Uint8Array(32); buf.set(bytes.slice(0, 32));
+      const timer = setTimeout(() => { this.pending = null; reject(new Error(`Bàn phím không phản hồi (lệnh 0x${hex(bytes[0])})`)); }, 1200);
+      this.pending = { cmd: bytes[0], resolve, timer };
+      this.dev.sendReport(0, buf).catch(err => { clearTimeout(timer); this.pending = null; reject(err); });
+    });
+    const p = this.queue.then(run, run);
+    this.queue = p.catch(() => {});
+    return p;
+  }
+}
+
+/* Bàn phím giả lập — hoạt động giống AULA F65 thật đã kiểm thử */
+class MockTransport {
+  constructor(def){
+    this.name = 'AULA F65 (giả lập)'; this.vid = 0x258A; this.pid = 0x010C; this.mock = true;
+    this.R = def.matrix.rows; this.C = def.matrix.cols; this.L = 4; this.proto = 11;
+    this.km = new Uint16Array(this.L * this.R * this.C); this.macro = new Uint8Array(512);
+    this.reset();
+  }
+  reset(){ FACTORY_KEYMAP.forEach((a, l) => a.forEach((v, i) => this.km[l*this.R*this.C + i] = v)); }
+  async open(){} async close(){}
+  async send(b){
+    await sleep(1);
+    const r = new Uint8Array(32); r.set(b.slice(0,32));
+    switch (b[0]){
+      case CMD.PROTO: r[1] = this.proto >> 8; r[2] = this.proto & 0xFF; break;
+      case CMD.LAYERS: r[1] = this.L; break;
+      case CMD.KM_SET: this.km[(b[1]*this.R + b[2])*this.C + b[3]] = (b[4] << 8) | b[5]; break;
+      case CMD.KM_RESET: this.reset(); break;
+      case CMD.KM_GETBUF: { const off = (b[1]<<8)|b[2]; for (let i = 0; i < b[3]; i++){ const o = off+i, v = this.km[o>>1]; r[4+i] = (o & 1) ? v & 0xFF : v >> 8; } break; }
+      case CMD.MACRO_COUNT: r[1] = 16; break;
+      case CMD.MACRO_SIZE: r[1] = this.macro.length >> 8; r[2] = this.macro.length & 0xFF; break;
+      case CMD.MACRO_GET: { const off = (b[1]<<8)|b[2]; r.set(this.macro.slice(off, off+b[3]), 4); break; }
+      case CMD.MACRO_SET: { const off = (b[1]<<8)|b[2]; this.macro.set(b.slice(4, 4+b[3]), off); break; }
+      case CMD.MACRO_RESET: this.macro.fill(0); break;
+      default: r[0] = 0xFF;
+    }
+    return r;
+  }
+}
+
+/* ====================================================================
+   Bảng keycode (QMK/VIA). VIA cũ (≤ v11) và mới (≥ v12) khác mã
+   cho phím lớp, macro, phím tùy biến và chuột.
+   ==================================================================== */
+const VER = {
+  10: {MT:0x6000, LT:0x4000, TO:0x5010, MO:0x5100, DF:0x5200, TG:0x5300, OSL:0x5400, TT:0x5800, MACRO:0x5F12, MACRO_N:16, USER:0x5F80, GESC:0x5C16,
+       mouse:[['KC_MS_U',0xF0,'Chuột\n↑'],['KC_MS_D',0xF1,'Chuột\n↓'],['KC_MS_L',0xF2,'Chuột\n←'],['KC_MS_R',0xF3,'Chuột\n→'],['KC_BTN1',0xF4,'Click\ntrái'],['KC_BTN2',0xF5,'Click\nphải'],['KC_BTN3',0xF6,'Click\ngiữa'],['KC_BTN4',0xF7,'Chuột\n4'],['KC_BTN5',0xF8,'Chuột\n5'],['KC_WH_U',0xF9,'Cuộn\n↑'],['KC_WH_D',0xFA,'Cuộn\n↓'],['KC_WH_L',0xFB,'Cuộn\n←'],['KC_WH_R',0xFC,'Cuộn\n→'],['KC_ACL0',0xFD,'Tốc\n0'],['KC_ACL1',0xFE,'Tốc\n1'],['KC_ACL2',0xFF,'Tốc\n2']]},
+  12: {MT:0x2000, LT:0x4000, TO:0x5200, MO:0x5220, DF:0x5240, TG:0x5260, OSL:0x5280, TT:0x52C0, MACRO:0x7700, MACRO_N:128, USER:0x7E00, GESC:0x7C16,
+       mouse:[['KC_MS_U',0xCD,'Chuột\n↑'],['KC_MS_D',0xCE,'Chuột\n↓'],['KC_MS_L',0xCF,'Chuột\n←'],['KC_MS_R',0xD0,'Chuột\n→'],['KC_BTN1',0xD1,'Click\ntrái'],['KC_BTN2',0xD2,'Click\nphải'],['KC_BTN3',0xD3,'Click\ngiữa'],['KC_BTN4',0xD4,'Chuột\n4'],['KC_BTN5',0xD5,'Chuột\n5'],['KC_WH_U',0xD9,'Cuộn\n↑'],['KC_WH_D',0xDA,'Cuộn\n↓'],['KC_WH_L',0xDB,'Cuộn\n←'],['KC_WH_R',0xDC,'Cuộn\n→'],['KC_ACL0',0xDD,'Tốc\n0'],['KC_ACL1',0xDE,'Tốc\n1'],['KC_ACL2',0xDF,'Tốc\n2']]},
+};
+/* Đặc điểm firmware đã kiểm thử trên bàn phím thật (AULA F65 có dây, 258A:010C):
+   - báo giao thức VIA v11 nhưng dùng bảng mã keycode v12 (Fn = MO(1) = 0x5221)
+   - phím riêng AULA = 0x7F00 + thứ tự trong customKeycodes
+   - lệnh 0x02 (ma trận), 0x04 (đọc 1 phím), 0x13 (ghi hàng loạt) không phản hồi
+   - không hỗ trợ lệnh đèn VIA */
+const PROFILES = {
+  '258A:010C': { kcVer: 12, userBase: 0x7F00, noMatrix: true, noLight: true, noSingleRead: true,
+                 layerNames: ['Win', 'Win + Fn', 'Mac', 'Mac + Fn'] },
+};
+const MOD_BITS = {LCTL:0x01, LSFT:0x02, LALT:0x04, LGUI:0x08, RCTL:0x11, RSFT:0x12, RALT:0x14, RGUI:0x18};
+const MOD_ALIAS = {C:'LCTL', S:'LSFT', A:'LALT', G:'LGUI', LOPT:'LALT', LCMD:'LGUI', LWIN:'LGUI', ROPT:'RALT', ALGR:'RALT', RCMD:'RGUI', RWIN:'RGUI'};
+
+function buildKC(ver, def, layerCount, userBase){
+  const T = {...VER[ver]}; if (userBase != null) T.USER = userBase;
+  const list = [], byCode = new Map(), byName = new Map();
+  const add = (code, name, label, title, group) => {
+    const e = {code, name, label: label ?? name.replace(/^KC_/, ''), title: title || name, group};
+    list.push(e); if (!byCode.has(code)) byCode.set(code, e); byName.set(name.toUpperCase(), e); return e;
+  };
+  const alias = (a, name) => byName.set(a, byName.get(name));
+  add(0x00,'KC_NO','','Không làm gì (vô hiệu hóa phím)','special'); alias('XXXXXXX','KC_NO');
+  add(0x01,'KC_TRNS','▽','Trong suốt — dùng chức năng của lớp bên dưới','special'); alias('_______','KC_TRNS'); alias('KC_TRANSPARENT','KC_TRNS');
+  add(T.GESC,'QK_GESC','Esc\n~','Grave Escape: Esc, khi giữ Shift/Win thì ra ~ `','special'); alias('KC_GESC','QK_GESC');
+  add(0x29,'KC_ESC','Esc','Escape','basic');
+  for (let i = 0; i < 12; i++) add(0x3A+i, 'KC_F'+(i+1), 'F'+(i+1), null, 'basic');
+  add(0x35,'KC_GRV','~\n`','Phím ` ~','basic');
+  const shifted = '!@#$%^&*()';
+  '1234567890'.split('').forEach((d,i) => add(0x1E+i, 'KC_'+d, `${shifted[i]}\n${d}`, 'Phím '+d, 'basic'));
+  add(0x2D,'KC_MINS','_\n-',null,'basic'); add(0x2E,'KC_EQL','+\n=',null,'basic'); add(0x2A,'KC_BSPC','Back\nspace','Backspace','basic');
+  add(0x2B,'KC_TAB','Tab',null,'basic');
+  for (let i = 0; i < 26; i++){ const ch = String.fromCharCode(65+i); add(0x04+i, 'KC_'+ch, ch, 'Phím '+ch, 'basic'); }
+  add(0x2F,'KC_LBRC','{\n[',null,'basic'); add(0x30,'KC_RBRC','}\n]',null,'basic'); add(0x31,'KC_BSLS','|\n\\',null,'basic');
+  add(0x39,'KC_CAPS','Caps\nLock','Caps Lock','basic'); add(0x33,'KC_SCLN',':\n;',null,'basic'); add(0x34,'KC_QUOT','"\n\'',null,'basic');
+  add(0x28,'KC_ENT','Enter',null,'basic'); add(0x36,'KC_COMM','<\n,',null,'basic'); add(0x37,'KC_DOT','>\n.',null,'basic');
+  add(0x38,'KC_SLSH','?\n/',null,'basic'); add(0x2C,'KC_SPC','Space',null,'basic');
+  add(0xE0,'KC_LCTL','Ctrl','Ctrl trái','basic'); add(0xE1,'KC_LSFT','Shift','Shift trái','basic'); add(0xE2,'KC_LALT','Alt','Alt trái','basic'); add(0xE3,'KC_LGUI','Win','Windows trái','basic');
+  add(0xE4,'KC_RCTL','R Ctrl','Ctrl phải','basic'); add(0xE5,'KC_RSFT','R Shift','Shift phải','basic'); add(0xE6,'KC_RALT','R Alt','Alt phải','basic'); add(0xE7,'KC_RGUI','R Win','Windows phải','basic');
+  add(0x65,'KC_APP','Menu','Phím Menu (chuột phải)','basic');
+  add(0x52,'KC_UP','↑',null,'basic'); add(0x51,'KC_DOWN','↓',null,'basic'); add(0x50,'KC_LEFT','←',null,'basic'); add(0x4F,'KC_RGHT','→',null,'basic');
+  add(0x49,'KC_INS','Ins','Insert','basic'); add(0x4C,'KC_DEL','Del','Delete','basic'); add(0x4A,'KC_HOME','Home',null,'basic'); add(0x4D,'KC_END','End',null,'basic');
+  add(0x4B,'KC_PGUP','PgUp','Page Up','basic'); add(0x4E,'KC_PGDN','PgDn','Page Down','basic');
+  add(0x46,'KC_PSCR','PrtSc','Print Screen','basic'); add(0x47,'KC_SCRL','ScrLk','Scroll Lock','basic'); add(0x48,'KC_PAUS','Pause',null,'basic');
+  [['KC_ENTER','KC_ENT'],['KC_ESCAPE','KC_ESC'],['KC_SPACE','KC_SPC'],['KC_BACKSPACE','KC_BSPC'],['KC_DELETE','KC_DEL'],['KC_RIGHT','KC_RGHT'],['KC_GRAVE','KC_GRV'],['KC_MINUS','KC_MINS'],['KC_EQUAL','KC_EQL'],['KC_SLASH','KC_SLSH'],['KC_COMMA','KC_COMM'],['KC_LCMD','KC_LGUI'],['KC_LWIN','KC_LGUI'],['KC_RCMD','KC_RGUI'],['KC_RWIN','KC_RGUI'],['KC_PSCREEN','KC_PSCR'],['KC_CAPSLOCK','KC_CAPS']].forEach(([a,n]) => alias(a,n));
+  add(0x53,'KC_NUM','Num\nLock','Num Lock','numpad'); add(0x54,'KC_PSLS','Num\n/',null,'numpad'); add(0x55,'KC_PAST','Num\n*',null,'numpad');
+  add(0x56,'KC_PMNS','Num\n-',null,'numpad'); add(0x57,'KC_PPLS','Num\n+',null,'numpad'); add(0x58,'KC_PENT','Num\nEnter',null,'numpad');
+  for (let i = 1; i <= 9; i++) add(0x58+i, 'KC_P'+i, 'Num\n'+i, null, 'numpad');
+  add(0x62,'KC_P0','Num\n0',null,'numpad'); add(0x63,'KC_PDOT','Num\n.',null,'numpad'); add(0x67,'KC_PEQL','Num\n=',null,'numpad');
+  for (let i = 13; i <= 24; i++) add(0x68+i-13, 'KC_F'+i, 'F'+i, null, 'fext');
+  add(0x64,'KC_NUBS','ISO\n\\','Phím \\ bàn phím ISO','fext'); add(0x32,'KC_NUHS','ISO\n#','Phím # bàn phím ISO','fext');
+  add(0x87,'KC_INT1','Ro',null,'fext'); add(0x88,'KC_INT2','Kana',null,'fext'); add(0x89,'KC_INT3','¥',null,'fext');
+  add(0x8A,'KC_INT4','Henkan',null,'fext'); add(0x8B,'KC_INT5','Muhen',null,'fext'); add(0x90,'KC_LNG1','Lang1','Hangul/English','fext'); add(0x91,'KC_LNG2','Lang2','Hanja','fext');
+  add(0xA8,'KC_MUTE','Tắt\ntiếng','Mute','media'); add(0xAA,'KC_VOLD','Vol −','Giảm âm lượng','media'); add(0xA9,'KC_VOLU','Vol +','Tăng âm lượng','media');
+  add(0xAE,'KC_MPLY','Play\nPause','Phát / tạm dừng','media'); add(0xAD,'KC_MSTP','Stop','Dừng','media');
+  add(0xAC,'KC_MPRV','Bài\ntrước','Bài trước','media'); add(0xAB,'KC_MNXT','Bài\nsau','Bài tiếp theo','media');
+  add(0xBC,'KC_MRWD','Tua\nlùi',null,'media'); add(0xBB,'KC_MFFD','Tua\nnhanh',null,'media'); add(0xB0,'KC_EJCT','Eject',null,'media');
+  add(0xBD,'KC_BRIU','Màn\nhình +','Tăng độ sáng màn hình','media'); add(0xBE,'KC_BRID','Màn\nhình −','Giảm độ sáng màn hình','media');
+  add(0xB2,'KC_CALC','Máy\ntính','Calculator','app'); add(0xB1,'KC_MAIL','Mail',null,'app'); add(0xB3,'KC_MYCM','This\nPC','This PC / My Computer','app');
+  add(0xB4,'KC_WSCH','Web\ntìm','Tìm kiếm web','app'); add(0xB5,'KC_WHOM','Web\nhome',null,'app'); add(0xB6,'KC_WBAK','Web\nlùi',null,'app');
+  add(0xB7,'KC_WFWD','Web\ntiến',null,'app'); add(0xB9,'KC_WREF','Web\ntải lại',null,'app'); add(0xBA,'KC_WFAV','Web\nyêu thích',null,'app');
+  add(0xA5,'KC_PWR','Power','Tắt máy','app'); add(0xA6,'KC_SLEP','Sleep','Ngủ','app'); add(0xA7,'KC_WAKE','Wake',null,'app');
+  for (const [n,c,l] of T.mouse) add(c, n, l, null, 'mouse');
+  for (let n = 0; n < 16; n++){
+    const vis = n < layerCount ? 'layer' : 'layer-hidden';
+    add(T.MO+n, `MO(${n})`, `MO(${n})`, `Giữ để dùng lớp ${n}`, vis);
+    add(T.TG+n, `TG(${n})`, `TG(${n})`, `Bật/tắt lớp ${n}`, vis);
+    add(T.TO+n, `TO(${n})`, `TO(${n})`, `Chuyển hẳn sang lớp ${n}`, vis);
+    add(T.TT+n, `TT(${n})`, `TT(${n})`, `Giữ = lớp ${n}, nhấn nhiều lần = bật lớp`, vis);
+    add(T.OSL+n, `OSL(${n})`, `OSL(${n})`, `Lớp ${n} cho một lần nhấn kế tiếp`, vis);
+    add(T.DF+n, `DF(${n})`, `DF(${n})`, `Đặt lớp ${n} làm lớp mặc định`, vis);
+  }
+  (def.customKeycodes || []).forEach((c, i) => add(T.USER+i, c.name.toUpperCase().replace(/[^A-Z0-9]+/g,'_'), c.shortName || c.name, c.title || c.name, 'aula'));
+  for (let i = 0; i < 64; i++) if (!byCode.has(T.USER+i)) add(T.USER+i, `USER${hex(i)}`, `USER\n${i}`, 'Phím tùy biến chưa đặt tên', 'user-hidden');
+  for (let i = 0; i < T.MACRO_N; i++){ add(T.MACRO+i, `M${i}`, `M${i}`, `Macro ${i}`, 'macro'); alias(`MACRO${i}`, `M${i}`); }
+  return {ver, T, list, byCode, byName};
+}
+
+function modLabel(m){ const r = m & 0x10 ? 'R' : ''; const p = []; if (m&1) p.push(r+'Ctrl'); if (m&2) p.push(r+'Shift'); if (m&4) p.push(r+'Alt'); if (m&8) p.push(r+'Win'); return p.join('+'); }
+function modName(m, inner){ const r = m & 0x10 ? 'R' : 'L'; let s = inner; for (const [b,n] of [[8,'GUI'],[4,'ALT'],[2,'SFT'],[1,'CTL']]) if (m & b) s = `${r}${n}(${s})`; return s; }
+function modMask(m){ const r = m & 0x10 ? 'R' : 'L'; return [[1,'CTL'],[2,'SFT'],[4,'ALT'],[8,'GUI']].filter(([b]) => m & b).map(([,n]) => `MOD_${r}${n}`).join('|'); }
+const flat = s => s.replace(/\n/g, ' ');
+
+function kcInfo(code){
+  const K = S.KC, T = K.T;
+  if (K.byCode.has(code)) return K.byCode.get(code);
+  const base = code & 0xFF, b = K.byCode.get(base), bn = b ? b.name : `0x${hex(base)}`, bl = b ? b.label.split('\n').pop() : hex(base);
+  if (code >= 0x0100 && code <= 0x1FFF){ const m = (code >> 8) & 0x1F; return {code, name: modName(m, bn), label: `${modLabel(m)}\n${bl}`, title: `Tổ hợp ${modLabel(m)} + ${bl}`, group:'combo'}; }
+  if (code >= T.MT && code < T.MT + 0x2000){ const m = (code >> 8) & 0x1F; return {code, name: `MT(${modMask(m)},${bn})`, label: `${bl}\n${modLabel(m)}`, title: `Nhấn = ${bl}, giữ = ${modLabel(m)}`, group:'combo'}; }
+  if (code >= T.LT && code < T.LT + 0x1000){ const n = (code >> 8) & 0x0F; return {code, name: `LT(${n},${bn})`, label: `${bl}\nLT ${n}`, title: `Nhấn = ${bl}, giữ = lớp ${n}`, group:'combo'}; }
+  return {code, name: `0x${hex(code,4)}`, label: hex(code,4), title: `Mã chưa biết 0x${hex(code,4)}`, group:'unknown'};
+}
+
+function splitArgs(s){ const out = []; let depth = 0, cur = ''; for (const ch of s){ if (ch === '(') depth++; if (ch === ')') depth--; if (ch === ',' && depth === 0){ out.push(cur); cur = ''; } else cur += ch; } if (cur.trim()) out.push(cur); return out.map(x => x.trim()); }
+function parseMods(s){ let m = 0; for (const p of s.split('|').map(x => x.trim().toUpperCase().replace(/^MOD_/, ''))){ const n = MOD_ALIAS[p] || p; if (MOD_BITS[n] == null) return null; m |= MOD_BITS[n]; } return m; }
+function parseKc(str){
+  const K = S.KC, T = K.T; const s = String(str).trim(); if (!s) return null;
+  if (/^0x[0-9a-f]{1,4}$/i.test(s)) return parseInt(s, 16);
+  const up = s.toUpperCase();
+  const e = K.byName.get(up) || K.byName.get('KC_' + up); if (e) return e.code;
+  const mt = up.match(/^([LR](?:CTL|SFT|ALT|GUI))_T\((.+)\)$/); if (mt){ const k = parseKc(mt[2]); return k != null && k <= 0xFF ? T.MT | (MOD_BITS[mt[1]] << 8) | k : null; }
+  const m = up.match(/^([A-Z_]+)\((.*)\)$/); if (!m) return null;
+  const fn = MOD_ALIAS[m[1]] || m[1], args = splitArgs(m[2]);
+  if (MOD_BITS[fn] != null && args.length === 1){ const k = parseKc(args[0]); if (k == null || k > 0x1FFF) return null; const mm = ((k >> 8) & 0x1F) | MOD_BITS[fn]; return (mm << 8) | (k & 0xFF); }
+  if (fn === 'LT' && args.length === 2){ const n = +args[0], k = parseKc(args[1]); return n >= 0 && n < 16 && k != null && k <= 0xFF ? T.LT | (n << 8) | k : null; }
+  if (fn === 'MT' && args.length === 2){ const mm = parseMods(args[0]), k = parseKc(args[1]); return mm != null && k != null && k <= 0xFF ? T.MT | (mm << 8) | k : null; }
+  if (['M','MACRO'].includes(fn) && args.length === 1){ const n = +args[0]; return n >= 0 && n < T.MACRO_N ? T.MACRO + n : null; }
+  return null;
+}
+
+/* ====================================================================
+   Trạng thái
+   ==================================================================== */
+const S = { def: DEFAULT_DEF, keys: [], t: null, profile: {}, proto: 0, layers: 4, layer: 0, keymap: null, sel: null, busy: false, status: '',
+  KC: null, kcPref: lsGet('aula.kcVer') || 'auto', macroCount: 0, macroSize: 0, macros: [], macroSel: 0, light: null,
+  page: 'configure', menu: 'keymap', cat: 'basic' };
+
+function parseLayout(def){
+  const keys = []; let y = 0;
+  for (const row of def.layouts.keymap){
+    if (!Array.isArray(row) || !row.length) continue;
+    let x = 0, p = {w:1, h:1};
+    for (const it of row){
+      if (it && typeof it === 'object'){
+        if (it.x != null) x += it.x; if (it.y != null) y += it.y;
+        if (it.w != null) p.w = it.w; if (it.h != null) p.h = it.h;
+      } else {
+        const lines = String(it).split('\n'), m = lines[0].match(/^(\d+),(\d+)$/);
+        const opt = (lines[3] || '').match(/^(\d+),(\d+)$/);
+        if (m && (!opt || opt[2] === '0')) keys.push({row:+m[1], col:+m[2], x, y, w:p.w, h:p.h});
+        x += p.w; p = {w:1, h:1};
+      }
+    }
+    y += 1;
+  }
+  return keys;
+}
+function setDef(def, persist){
+  if (!def?.matrix?.rows || !def?.layouts?.keymap) throw new Error('File không phải định nghĩa VIA hợp lệ (thiếu matrix/layouts.keymap)');
+  S.def = def; S.keys = parseLayout(def);
+  if (persist !== undefined) lsSet('aula.def', persist ? JSON.stringify(def) : null);
+  rebuildKC();
+}
+function sniffKeymap(){
+  const all = (S.keymap || []).flat().filter(c => c != null);
+  const v12 = all.some(c => (c >= 0x5220 && c <= 0x52DF) || (c >= 0x7E00 && c <= 0x7FFF));
+  const v10 = all.some(c => c >= 0x5100 && c <= 0x51FF);
+  return { kcVer: v12 ? 12 : v10 ? 10 : null, userBase: all.some(c => c >= 0x7F00 && c <= 0x7F3F) ? 0x7F00 : null };
+}
+function rebuildKC(){
+  const sn = S.t ? sniffKeymap() : {};
+  const prof = S.t ? S.profile : (PROFILES[`${hex(toInt(S.def.vendorId),4)}:${hex(toInt(S.def.productId),4)}`] || {});
+  const ver = S.kcPref !== 'auto' ? +S.kcPref : (prof.kcVer ?? sn.kcVer ?? (S.proto >= 12 ? 12 : 10));
+  S.KC = buildKC(ver, S.def, S.layers, prof.userBase ?? sn.userBase ?? null);
+}
+const isFactoryDef = () => toInt(S.def.vendorId) === 0x258A && toInt(S.def.productId) === 0x010C;
+/* sơ đồ đang hiển thị: của bàn phím thật, hoặc sơ đồ gốc khi chưa kết nối */
+const viewKeymap = () => S.keymap || (isFactoryDef() ? FACTORY_KEYMAP : null);
+const getKc = (l, k, km = viewKeymap()) => km?.[l]?.[k.row * S.def.matrix.cols + k.col];
+const connected = () => !!S.t && !!S.keymap;
+const layerName = l => (S.t ? S.profile : PROFILES['258A:010C'])?.layerNames?.[l] ?? (l === 0 ? 'Chính' : `Lớp ${l}`);
+
+/* ====================================================================
+   Thanh điều hướng & chip thiết bị
+   ==================================================================== */
+function renderNav(){
+  const nt = $('#navtabs'); nt.innerHTML = '';
+  for (const [id, name] of [['configure','Cấu hình'],['test','Kiểm tra phím'],['settings','Cài đặt']])
+    nt.append(el('button', {class: S.page === id ? 'on' : '', onclick: () => go(id)}, icon(id, 17), el('span', {}, name)));
+  const dc = $('#devchip'); dc.innerHTML = '';
+  if (S.t){
+    const kind = S.busy ? 'busy' : S.keymap ? 'ok' : 'err';
+    dc.append(el('div', {class:'chip', title: S.status}, el('span', {class:'dot ' + kind}), el('span', {}, S.busy ? 'Đang đọc…' : S.t.name),
+      el('button', {class:'iconbtn', title:'Ngắt kết nối', onclick: () => disconnect()}, icon('plug', 14))));
+  } else if ('hid' in navigator){
+    dc.append(el('button', {class:'btn primary', onclick: () => connect(false)}, 'Kết nối'));
+  }
+}
+function go(page){ S.page = page; if (page !== 'test') stopTester(); renderAll(); if (page === 'test') startTester(); }
+
+/* ====================================================================
+   Bàn phím
+   ==================================================================== */
+function capType(code0){
+  if (code0 === 0x29 || code0 === 0x28) return 'accent';
+  if ((code0 >= 0x04 && code0 <= 0x27) || (code0 >= 0x2D && code0 <= 0x38) || code0 === 0x2C) return 'alpha';
+  return 'mod';
+}
+function renderStage(){
+  const stage = $('#stage');
+  // thanh chọn lớp
+  const lb = $('#layerbar'); lb.innerHTML = '';
+  if (S.page === 'configure'){
+    lb.append(el('span', {class:'lbl'}, 'Lớp'));
+    for (let l = 0; l < S.layers; l++)
+      lb.append(el('button', {class: l === S.layer ? 'on' : '', title: `Lớp ${l}`, onclick: () => { S.layer = l; renderStage(); }}, `${l} · ${layerName(l)}`));
+  } else if (S.page === 'test') lb.append(el('span', {class:'lbl'}, 'Kiểm tra phím'));
+  // vẽ phím
+  const kb = $('#kb'); kb.innerHTML = '';
+  if (S.keys.length){
+    const minY = Math.min(...S.keys.map(k => k.y));
+    const W = Math.max(...S.keys.map(k => k.x + k.w)), H = Math.max(...S.keys.map(k => k.y + k.h)) - minY;
+    const avail = Math.min(window.innerWidth - 32, 1100) - 28;
+    const U = Math.max(28, Math.min(62, Math.floor(avail / W)));
+    kb.style.width = W*U + 'px'; kb.style.height = H*U + 'px';
+    const layer = S.page === 'configure' ? S.layer : 0;
+    for (const k of S.keys){
+      const c0 = getKc(0, k);
+      const lbl = el('span', {class:'lbl'}), cap = el('div', {class:'cap'}, lbl);
+      const e = el('div', {class: 'key ' + capType(c0 ?? 0x04), onclick: () => S.page === 'configure' && selectKey(k)}, cap);
+      Object.assign(e.style, {left: k.x*U + 'px', top: (k.y-minY)*U + 'px', width: k.w*U + 'px', height: k.h*U + 'px'});
+      k.el = e; k.cap = cap; k.lbl = lbl; kb.append(e);
+      paintKey(k, layer);
+    }
+  }
+  // lớp phủ khi chưa kết nối
+  const ov = $('#overlay'); ov.innerHTML = '';
+  const showOv = S.page === 'configure' && !connected();
+  stage.classList.toggle('dim', showOv); ov.hidden = !showOv;
+  if (showOv){
+    const blocked = ('hid' in navigator) && !hidAllowed();
+    const noHid = !('hid' in navigator) || blocked;
+    ov.append(el('div', {class:'card'},
+      el('h2', {}, S.busy ? 'Đang đọc bàn phím…' : blocked ? 'Không thể truy cập USB ở đây' : 'Chưa kết nối bàn phím'),
+      el('p', {}, blocked ? 'Trang đang được mở trong một khung xem trước nên trình duyệt chặn kết nối tới bàn phím. Hãy mở trực tiếp file aula-f65-configurator.html bằng Google Chrome hoặc Microsoft Edge ' + openHint() + '.'
+                : noHid ? 'Trình duyệt này không hỗ trợ kết nối USB (WebHID). Safari và Firefox không dùng được — hãy mở file bằng Google Chrome hoặc Microsoft Edge ' + openHint() + '.'
+                        : S.t && !S.busy ? (S.status || 'Không đọc được dữ liệu từ thiết bị.') : 'Cắm AULA F65 bằng cáp USB, rồi bấm Kết nối và chọn bàn phím trong danh sách.'),
+      noHid || S.busy ? null : el('div', {class:'row'},
+        el('button', {class:'btn primary', onclick: () => connect(false)}, 'Kết nối bàn phím'),
+        el('button', {class:'btn', onclick: () => useTransport(new MockTransport(S.def))}, 'Chế độ thử'))));
+  }
+  renderSel();
+}
+/* Tên phím bổ trợ kiểu Mac (Cmd/Option) cho lớp Mac, hoặc khi máy đang chạy macOS mà lớp không ghi rõ Win/Mac */
+const isMacOS = () => /mac/i.test(navigator.userAgentData?.platform || navigator.platform || '');
+function macCtx(l){ const n = layerName(l); if (/mac/i.test(n)) return true; if (/win/i.test(n)) return false; return isMacOS(); }
+const macLabel = (s, group) => group === 'aula' ? s : s.replace(/\bWin\b/g, 'Cmd').replace(/\bAlt\b/g, 'Option');
+const keyLabel = (i, l) => macCtx(l) ? macLabel(i.label, i.group) : i.label;
+const openHint = () => isMacOS()
+  ? '(trên Mac: bấm chuột phải hoặc Control + bấm vào file → Mở bằng → Google Chrome)'
+  : '(chuột phải vào file → Open with → Chrome hoặc Edge)';
+function paintKey(k, layer){
+  const code = getKc(layer, k);
+  let cls = 'cap';
+  if (code == null){ k.lbl.textContent = ''; k.el.title = `Ma trận ${k.row},${k.col}`; }
+  else {
+    const i = {...kcInfo(code)}; i.label = keyLabel(i, layer);
+    k.lbl.textContent = i.label;
+    k.el.title = `${i.title}\n${i.name} · 0x${hex(code,4)} · ma trận ${k.row},${k.col}`;
+    if (code === 1) cls += ' trns'; else if (i.group === 'aula') cls += ' custom'; else if (i.group?.startsWith('layer')) cls += ' layer';
+    const longest = Math.max(...i.label.split('\n').map(x => x.length));
+    k.el.classList.toggle('xs', longest > 6 || (longest > 4 && k.w < 1.2));
+    k.el.classList.toggle('sm', longest > 4 && !(longest > 6 || k.w < 1.2));
+  }
+  k.cap.className = cls;
+  k.el.classList.toggle('sel', S.page === 'configure' && S.sel === k);
+}
+function repaint(){ const layer = S.page === 'configure' ? S.layer : 0; for (const k of S.keys) if (k.el) paintKey(k, layer); renderSel(); }
+function selectKey(k){ if (!connected()) return; S.sel = S.sel === k ? null : k; if (S.sel) S.menu = 'keymap'; repaint(); syncHint(); if (S.menu === 'keymap' && !$('.grid-area')) renderConfig(); }
+function syncHint(){ const n = $('#pickHint'); if (n) n.hidden = !!S.sel; }
+function renderSel(){
+  const box = $('#selinfo'); box.innerHTML = '';
+  if (S.page === 'test'){ box.textContent = testHint; return; }
+  if (S.page !== 'configure' || !connected()) return;
+  if (!S.sel){ box.textContent = 'Bấm vào một phím trên bàn phím, sau đó chọn chức năng mới ở bảng bên dưới.'; return; }
+  const code = getKc(S.layer, S.sel), i = kcInfo(code);
+  box.append('Phím đang chọn (lớp ', el('b', {}, `${S.layer} · ${layerName(S.layer)}`), '): ', el('b', {}, i.title), ' ', el('code', {}, i.name));
+}
+
+/* ====================================================================
+   Khu cấu hình phía dưới
+   ==================================================================== */
+const MENUS = [['keymap','Gán phím'],['macro','Macro'],['light','Đèn'],['save','Lưu & Tải']];
+function renderConfig(){
+  const cfg = $('#config'); cfg.innerHTML = '';
+  cfg.style.display = 'grid';
+  if (S.page === 'settings'){ cfg.style.display = 'flex'; cfg.append(renderSettings()); return; }
+  if (S.page === 'test'){ cfg.style.display = 'flex'; cfg.append(renderTestPage()); return; }
+  const menu = el('div', {class:'menu'});
+  for (const [id, name] of MENUS) menu.append(el('button', {class: S.menu === id ? 'on' : '', onclick: () => { S.menu = id; renderConfig(); }}, icon(id), name));
+  const content = el('div', {class:'content'});
+  cfg.append(menu, content);
+  if (S.menu === 'keymap') renderKeymapPane(content);
+  else if (S.menu === 'macro') content.append(renderMacroPane());
+  else if (S.menu === 'light') content.append(renderLightPane());
+  else content.append(renderSavePane());
+}
+
+/* ---- Gán phím ---- */
+const CATS = [['basic','Cơ bản'],['media','Media & ứng dụng'],['mouse','Chuột'],['aula','Chức năng AULA'],['layer','Lớp'],['macro','Macro'],['special','Đặc biệt'],['advanced','Tổ hợp & nâng cao']];
+const BASIC_SECTIONS = [
+  ['Chữ cái', Array.from({length:26}, (_,i) => 0x04+i)],
+  ['Số & ký hiệu', [0x35,0x1E,0x1F,0x20,0x21,0x22,0x23,0x24,0x25,0x26,0x27,0x2D,0x2E,0x2F,0x30,0x31,0x33,0x34,0x36,0x37,0x38]],
+  ['Điều khiển', [0x29,0x2B,0x39,0x2A,0x28,0x2C,0x65]],
+  ['Phím bổ trợ', [0xE0,0xE1,0xE2,0xE3,0xE4,0xE5,0xE6,0xE7]],
+  ['Điều hướng', [0x52,0x51,0x50,0x4F,0x49,0x4C,0x4A,0x4D,0x4B,0x4E]],
+  ['F1 – F12', Array.from({length:12}, (_,i) => 0x3A+i)],
+  ['Hệ thống', [0x46,0x47,0x48]],
+];
+function kcButton(e, wide){
+  return el('button', {class: 'kc' + (wide ? ' w2' : '') + (e.group === 'aula' ? ' custom' : e.group?.startsWith('layer') ? ' layer' : ''),
+    title: `${e.title}\n${e.name} · 0x${hex(e.code,4)}`, onclick: () => assign(e.code)}, keyLabel(e, S.layer) || '∅');
+}
+function section(title, entries, wide){ return [el('div', {class:'sec-title'}, title), el('div', {class:'kgrid'}, entries.filter(Boolean).map(e => kcButton(e, wide)))]; }
+function renderKeymapPane(content){
+  const cats = el('div', {class:'cats'});
+  for (const [id, name] of CATS) cats.append(el('button', {class: S.cat === id ? 'on' : '', onclick: () => { S.cat = id; renderConfig(); }}, name));
+  const area = el('div', {class:'grid-area'});
+  content.append(cats, area);
+  if (!connected()){ area.append(el('p', {class:'note'}, 'Kết nối bàn phím để gán phím.')); return; }
+  area.append(el('p', {class:'note', id:'pickHint', hidden: !!S.sel}, 'Hãy bấm chọn một phím trên bàn phím phía trên trước. Sau khi gán, ô chọn tự chuyển sang phím kế tiếp.'));
+  const K = S.KC, by = c => K.byCode.get(c), grp = g => K.list.filter(e => e.group === g);
+  switch (S.cat){
+    case 'basic': for (const [t, codes] of BASIC_SECTIONS) area.append(...section(t, codes.map(by))); break;
+    case 'media': area.append(...section('Âm thanh & phát nhạc', grp('media')), ...section('Ứng dụng & hệ thống', grp('app'))); break;
+    case 'mouse': area.append(el('p', {class:'note'}, 'Điều khiển con trỏ chuột bằng bàn phím. Tùy firmware, một số phím có thể không hoạt động.'), ...section('Chuột', grp('mouse'))); break;
+    case 'aula': {
+      const all = grp('aula'), used = new Set(), pick = names => all.filter(e => names.includes(e.name) && used.add(e.name));
+      area.append(el('p', {class:'note'}, 'Các chức năng riêng của AULA F65. Mặc định chúng nằm ở lớp "Win + Fn" và "Mac + Fn" (giữ Fn rồi nhấn phím).'));
+      for (const [t, names] of [
+        ['Kết nối', ['USB_MODE','2_4G_MODE','BLUETOOTH_1','BLUETOOTH_2','BLUETOOTH_3','BATTERY_VIEW']],
+        ['Đèn nền', ['RGB_OFF_ON','RGB_MODE_CYCLE','RGB_COLOR_CYCLE','BRIGTH_INC','BRIGTH_DEC','SPEED_INC','SPEED_DEC','WHITE_MODE','GAME_MODE','GAME_MODE_RECORD']],
+        ['Đèn cạnh', ['SIDE_MODE','SIDE_COLOR','SIDE_BRIGHT','SIDE_SPEED']],
+        ['Hệ thống', ['LOCK_WIN','WIN_MAC','WIN','MAC','NKRO_MODE','SWAP_ASDW','KEYBOARD_RESET','EMI_TEST']]]){
+        const items = pick(names); if (items.length) area.append(...section(t, items));
+      }
+      const rest = all.filter(e => !used.has(e.name));
+      if (rest.length) area.append(...section('Khác', rest));
+      break;
+    }
+    case 'layer': {
+      area.append(el('p', {class:'note'}, 'MO = giữ để dùng lớp · TG = bật/tắt lớp · TO = chuyển hẳn sang lớp · TT = giữ, hoặc nhấn liên tiếp để bật · OSL = lớp cho 1 lần nhấn · DF = đổi lớp mặc định.'));
+      for (const p of ['MO','TG','TO','TT','OSL','DF']) area.append(...section(p, grp('layer').filter(e => e.name.startsWith(p + '('))));
+      break;
+    }
+    case 'macro':
+      if (!S.macroCount){ area.append(el('p', {class:'note'}, 'Bàn phím không hỗ trợ macro.')); break; }
+      area.append(el('p', {class:'note'}, 'Gán macro vào phím. Nội dung macro chỉnh ở mục "Macro" bên trái.'),
+        ...section('Macro', grp('macro').slice(0, S.macroCount).map(e => ({...e, title: S.macros[e.code - K.T.MACRO] ? `Macro: ${S.macros[e.code - K.T.MACRO]}` : 'Macro trống'}))));
+      break;
+    case 'special':
+      area.append(...section('Đặc biệt', [by(0x01), by(0x00), by(K.T.GESC)]), ...section('Bàn phím số', grp('numpad')), ...section('F13 – F24 & quốc tế', grp('fext')));
+      break;
+    case 'advanced': area.append(renderAdvanced()); break;
+  }
+}
+function basicSelect(){ const s = el('select'); for (const e of S.KC.list.filter(e => e.group === 'basic' && e.code <= 0xFF)) s.append(el('option', {value: e.code}, `${flat(e.label)}  (${e.name})`)); return s; }
+function modChecks(){
+  const box = el('div', {class:'row'}); const boxes = {};
+  for (const [b, n] of [[1,'Ctrl'],[2,'Shift'],[4,'Alt'],[8,'Win']]){ const c = el('input', {type:'checkbox'}); boxes[b] = c; box.append(el('label', {class:'chk'}, c, n)); }
+  const right = el('input', {type:'checkbox'}); box.append(el('label', {class:'chk'}, right, 'bên phải'));
+  return {box, get: () => { let m = 0; for (const b in boxes) if (boxes[b].checked) m |= +b; return m ? m | (right.checked ? 0x10 : 0) : 0; }};
+}
+function renderAdvanced(){
+  const T = S.KC.T, g = el('div', {class:'cards'});
+  { const mc = modChecks(), ks = basicSelect();
+    g.append(el('div', {class:'card'}, el('h3', {}, 'Tổ hợp phím'), el('p', {}, 'Một lần nhấn gửi cả tổ hợp, ví dụ Ctrl + C.'), mc.box, el('div', {class:'row', style:'margin-top:10px'}, ks,
+      el('button', {class:'btn primary', onclick: () => { const m = mc.get(); if (!m) return toast('Chọn ít nhất một phím bổ trợ', true); assign((m << 8) | +ks.value); }}, 'Gán')))); }
+  { const mc = modChecks(), ks = basicSelect();
+    g.append(el('div', {class:'card'}, el('h3', {}, 'Nhấn / giữ'), el('p', {}, 'Nhấn nhanh = phím thường, giữ = phím bổ trợ (Mod-Tap).'), mc.box, el('div', {class:'row', style:'margin-top:10px'}, ks,
+      el('button', {class:'btn primary', onclick: () => { const m = mc.get(); if (!m) return toast('Chọn ít nhất một phím bổ trợ', true); assign(T.MT | (m << 8) | +ks.value); }}, 'Gán')))); }
+  { const ls = el('select'); for (let l = 0; l < S.layers; l++) ls.append(el('option', {value:l}, `Lớp ${l} · ${layerName(l)}`)); const ks = basicSelect();
+    g.append(el('div', {class:'card'}, el('h3', {}, 'Nhấn = phím, giữ = lớp'), el('p', {}, 'Layer-Tap: giữ để chuyển lớp, nhấn nhanh ra phím thường.'), el('div', {class:'row'}, 'Giữ', ls, 'Nhấn', ks,
+      el('button', {class:'btn primary', onclick: () => assign(T.LT | (+ls.value << 8) | +ks.value)}, 'Gán')))); }
+  { const inp = el('input', {type:'text', placeholder:'KC_A, LCTL(KC_C), MO(1), 0x7F02…', style:'flex:1;min-width:180px'});
+    const goKc = () => { const c = parseKc(inp.value); if (c == null) return toast('Không hiểu mã này', true); assign(c); };
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') goKc(); });
+    g.append(el('div', {class:'card'}, el('h3', {}, 'Nhập mã bất kỳ'), el('p', {}, 'Dành cho người đã quen mã QMK/VIA.'), el('div', {class:'row'}, inp, el('button', {class:'btn primary', onclick: goKc}, 'Gán')))); }
+  return g;
+}
+
+async function assign(code){
+  if (!connected()) return toast('Chưa kết nối bàn phím', true);
+  if (!S.sel) return toast('Hãy bấm chọn một phím trên bàn phím trước', true);
+  const k = S.sel, C = S.def.matrix.cols;
+  try {
+    const r = await S.t.send([CMD.KM_SET, S.layer, k.row, k.col, code >> 8, code & 0xFF]);
+    if (r[0] === CMD.UNHANDLED) throw new Error('Bàn phím từ chối lệnh ghi phím');
+    S.keymap[S.layer][k.row*C + k.col] = code;
+    const idx = S.keys.indexOf(k); S.sel = S.keys[idx + 1] || null;
+    repaint(); syncHint();
+  } catch (e){ toast(e.message, true); }
+}
+
+/* ====================================================================
+   Kết nối
+   ==================================================================== */
+/* Trang mở trong iframe/khung xem trước (vd. khung xem trước của ứng dụng) thường bị chặn WebHID */
+let hidBlocked = false;
+function hidAllowed(){
+  try { const fp = document.permissionsPolicy || document.featurePolicy; if (fp && !fp.allowsFeature('hid')) return false; } catch {}
+  return !hidBlocked;
+}
+async function connect(all){
+  if (!('hid' in navigator)) return toast('Trình duyệt không hỗ trợ WebHID', true);
+  const filters = all ? [] : [{vendorId: toInt(S.def.vendorId), usagePage: 0xFF60, usage: 0x61}, {usagePage: 0xFF60, usage: 0x61}];
+  if (!hidAllowed()){ hidBlocked = true; renderAll(); return toast('Trang đang mở trong khung xem trước nên bị chặn truy cập USB. Hãy mở file bằng Chrome hoặc Edge.', true); }
+  let devs;
+  try { devs = await navigator.hid.requestDevice({filters}); }
+  catch (e){
+    if (/permissions policy|disallowed/i.test(e.message)){ hidBlocked = true; renderAll(); return toast('Trang đang mở trong khung xem trước nên bị chặn truy cập USB. Hãy mở file bằng Chrome hoặc Edge.', true); }
+    return toast(e.message, true);
+  }
+  if (!devs.length) return;
+  const dev = devs.find(d => d.collections.some(c => c.usagePage === 0xFF60)) || devs[0];
+  if (!dev.collections.some(c => c.usagePage === 0xFF60)) toast('Thiết bị này không có cổng cấu hình VIA — có thể sẽ không giao tiếp được', true);
+  await useTransport(new HidTransport(dev));
+}
+async function useTransport(t){
+  await disconnect(true);
+  S.t = t; S.keymap = null; S.sel = null; S.light = null; S.busy = true; S.status = '';
+  S.profile = PROFILES[`${hex(t.vid,4)}:${hex(t.pid,4)}`] || {};
+  renderAll();
+  try {
+    await t.open();
+    const p = await t.send([CMD.PROTO]);
+    if (p[0] === CMD.UNHANDLED) throw new Error('Thiết bị không hỗ trợ giao thức VIA');
+    S.proto = (p[1] << 8) | p[2];
+    const lc = await t.send([CMD.LAYERS]); S.layers = lc[0] === CMD.UNHANDLED || !lc[1] ? 4 : lc[1];
+    S.layer = Math.min(S.layer, S.layers - 1);
+    await readKeymap();
+    rebuildKC();
+    try {
+      const mc = await t.send([CMD.MACRO_COUNT]); S.macroCount = mc[0] === CMD.UNHANDLED ? 0 : mc[1];
+      if (S.macroCount){ const ms = await t.send([CMD.MACRO_SIZE]); S.macroSize = (ms[1] << 8) | ms[2]; await readMacros(); }
+    } catch { S.macroCount = 0; }
+    if (!S.profile.noLight) try { await lightProbe(); } catch { S.light = null; }
+    S.status = `${t.name} · VIA v${S.proto} · ${S.layers} lớp`;
+    if (t.mock) toast('Đang ở chế độ thử: thay đổi chỉ nằm trong bộ nhớ, không gửi tới bàn phím thật');
+  } catch (e){
+    S.keymap = null; S.status = 'Lỗi: ' + e.message; toast(e.message, true);
+  }
+  S.busy = false; progress(null); renderAll();
+}
+async function disconnect(silent){
+  stopTester();
+  if (S.t){ const t = S.t; S.t = null; await t.close(); }
+  S.keymap = null; S.sel = null; S.macroCount = 0; S.macros = []; S.light = null; S.proto = 0; S.profile = {}; S.layers = 4; S.status = '';
+  if (!silent){ rebuildKC(); renderAll(); }
+}
+
+async function readKeymap(){
+  const {rows: R, cols: C} = S.def.matrix, L = S.layers, total = L*R*C*2;
+  const buf = new Uint8Array(total); let ok = true;
+  try {
+    for (let off = 0; off < total; off += 28){
+      const n = Math.min(28, total - off);
+      const r = await S.t.send([CMD.KM_GETBUF, off >> 8, off & 0xFF, n]);
+      if (r[0] === CMD.UNHANDLED){ ok = false; break; }
+      buf.set(r.slice(4, 4 + n), off); progress(off / total);
+    }
+  } catch { ok = false; }
+  const km = Array.from({length: L}, () => new Array(R*C).fill(null));
+  if (ok){
+    for (let l = 0; l < L; l++) for (let i = 0; i < R*C; i++){ const o = (l*R*C + i)*2; km[l][i] = (buf[o] << 8) | buf[o+1]; }
+  } else {
+    if (S.profile.noSingleRead) throw new Error('Không đọc được sơ đồ phím');
+    let n = 0;
+    for (let l = 0; l < L; l++) for (const k of S.keys){
+      const r = await S.t.send([CMD.KM_GET, l, k.row, k.col]);
+      km[l][k.row*C + k.col] = (r[4] << 8) | r[5]; progress(++n / (L*S.keys.length));
+    }
+  }
+  S.keymap = km;
+}
+
+/* ====================================================================
+   Macro
+   ==================================================================== */
+function macroDecode(bytes){
+  const tok = []; let txt = '';
+  const flush = () => { if (txt){ tok.push({t:'text', v:txt}); txt = ''; } };
+  for (let i = 0; i < bytes.length;){
+    const b = bytes[i];
+    if (b === 1){
+      flush(); const a = bytes[i+1];
+      if (a === 4){ let j = i + 2, num = ''; while (j < bytes.length && bytes[j] !== 0x7C) num += String.fromCharCode(bytes[j++]); tok.push({t:'delay', v:num}); i = j + 1; continue; }
+      if (a >= 1 && a <= 3){ tok.push({t: ['','tap','down','up'][a], v: bytes[i+2]}); i += 3; continue; }
+      i += 2; continue;
+    }
+    txt += String.fromCharCode(b); i++;
+  }
+  flush();
+  const nm = c => S.KC.byCode.get(c)?.name || `0x${hex(c)}`;
+  let out = '';
+  for (let i = 0; i < tok.length; i++){
+    const t = tok[i];
+    if (t.t === 'text'){ out += t.v; continue; }
+    if (t.t === 'delay'){ out += `{${t.v}}`; continue; }
+    if (t.t === 'tap'){ out += `{${nm(t.v)}}`; continue; }
+    if (t.t === 'down'){
+      let j = i; const downs = []; while (j < tok.length && tok[j].t === 'down') downs.push(tok[j++].v);
+      const ups = tok.slice(j, j + downs.length);
+      if (ups.length === downs.length && ups.every((u, x) => u.t === 'up' && u.v === downs[downs.length-1-x])){ out += `{${downs.map(nm).join(',')}}`; i = j + downs.length - 1; continue; }
+      out += `{+${nm(t.v)}}`; continue;
+    }
+    out += `{-${nm(t.v)}}`;
+  }
+  return out;
+}
+function macroEncode(text){
+  const out = [];
+  const kc = s => { const c = parseKc(s); if (c == null || c > 0xFF) throw new Error(`"${s}" không phải phím cơ bản hợp lệ`); return c; };
+  const pushText = s => { for (const ch of s){ const c = ch.charCodeAt(0); if (c > 0x7E || (c < 0x20 && c !== 0x0A && c !== 0x09)) throw new Error(`ký tự "${ch}" không được hỗ trợ (chỉ dùng chữ không dấu)`); out.push(c); } };
+  const re = /\{([^}]*)\}/g; let last = 0, m;
+  while ((m = re.exec(text))){
+    pushText(text.slice(last, m.index)); last = re.lastIndex;
+    const inner = m[1].trim();
+    if (/^\d+$/.test(inner)){ out.push(1, 4, ...[...inner].map(c => c.charCodeAt(0)), 0x7C); continue; }
+    if (inner.startsWith('+')){ out.push(1, 2, kc(inner.slice(1))); continue; }
+    if (inner.startsWith('-')){ out.push(1, 3, kc(inner.slice(1))); continue; }
+    const ks = inner.split(',').map(kc);
+    if (ks.length === 1) out.push(1, 1, ks[0]);
+    else { ks.forEach(k => out.push(1, 2, k)); [...ks].reverse().forEach(k => out.push(1, 3, k)); }
+  }
+  pushText(text.slice(last));
+  return out;
+}
+async function readMacros(){
+  const size = S.macroSize, buf = new Uint8Array(size);
+  for (let off = 0; off < size; off += 28){
+    const n = Math.min(28, size - off);
+    const r = await S.t.send([CMD.MACRO_GET, off >> 8, off & 0xFF, n]);
+    buf.set(r.slice(4, 4 + n), off);
+    let z = 0; for (let i = 0; i < off + n; i++) if (buf[i] === 0) z++;
+    if (z >= S.macroCount) break;
+  }
+  S.macros = []; let start = 0;
+  for (let i = 0; i < size && S.macros.length < S.macroCount; i++) if (buf[i] === 0){ S.macros.push(macroDecode(buf.slice(start, i))); start = i + 1; }
+  while (S.macros.length < S.macroCount) S.macros.push('');
+}
+async function writeMacros(texts){
+  const data = [];
+  texts.forEach((t, i) => { try { data.push(...macroEncode(t), 0); } catch (e){ throw new Error(`M${i}: ${e.message}`); } });
+  if (data.length > S.macroSize) throw new Error(`Macro quá dài: ${data.length}/${S.macroSize} byte`);
+  for (let off = 0; off < data.length; off += 28){
+    const chunk = data.slice(off, off + 28);
+    await S.t.send([CMD.MACRO_SET, off >> 8, off & 0xFF, chunk.length, ...chunk]);
+    progress(off / data.length);
+  }
+  progress(null);
+  S.macros = [...texts];
+}
+function macroBytes(texts){ let n = 0; for (const t of texts){ try { n += macroEncode(t).length + 1; } catch { n += t.length + 1; } } return n; }
+
+let draft = null, recording = null;
+function renderMacroPane(){
+  const page = el('div', {class:'page'});
+  if (!connected()){ page.append(el('p', {class:'note'}, 'Kết nối bàn phím để chỉnh macro.')); return page; }
+  if (!S.macroCount){ page.append(el('p', {class:'note'}, 'Bàn phím không hỗ trợ macro.')); return page; }
+  if (!draft || draft.length !== S.macroCount) draft = [...S.macros];
+  const i = S.macroSel;
+  const chips = el('div', {class:'mchips'});
+  for (let n = 0; n < S.macroCount; n++)
+    chips.append(el('button', {class: (n === i ? 'on ' : '') + (draft[n] ? 'has' : ''), title: draft[n] || 'Trống', onclick: () => { S.macroSel = n; renderConfig(); }}, `M${n}`));
+  const ta = el('textarea', {placeholder: 'Ví dụ:  Xin chao{KC_ENT}   hoặc   {KC_LCTL,KC_C}', spellcheck: 'false'}); ta.value = draft[i];
+  const used = () => macroBytes(draft), meterBar = el('div'), meterTxt = el('span', {class:'note'});
+  const updMeter = () => { const u = used(); meterBar.style.width = Math.min(100, u / S.macroSize * 100) + '%'; meterTxt.textContent = `Bộ nhớ: ${u} / ${S.macroSize} byte`; };
+  ta.addEventListener('input', () => { draft[i] = ta.value; updMeter(); chips.children[i].classList.toggle('has', !!ta.value); });
+  const insert = s => { const a = ta.selectionStart, b = ta.selectionEnd; ta.value = ta.value.slice(0, a) + s + ta.value.slice(b); ta.selectionStart = ta.selectionEnd = a + s.length; ta.focus(); ta.dispatchEvent(new Event('input')); };
+  const toks = el('div', {class:'tokbar'},
+    el('button', {onclick: () => insert('{KC_ENT}')}, '+ Enter'), el('button', {onclick: () => insert('{KC_TAB}')}, '+ Tab'),
+    el('button', {onclick: () => insert('{KC_LCTL,KC_C}')}, '+ Ctrl+C'), el('button', {onclick: () => insert('{KC_LCTL,KC_V}')}, '+ Ctrl+V'),
+    el('button', {onclick: () => insert('{KC_LGUI,KC_R}')}, '+ Win+R'), el('button', {onclick: () => insert('{100}')}, '+ Chờ 100 ms'));
+  const recBtn = el('button', {class:'btn' + (recording ? ' rec' : ''), onclick: () => toggleRecord(ta, recBtn)}, recording ? '■ Dừng ghi' : '● Ghi từ bàn phím');
+  const dirty = JSON.stringify(draft) !== JSON.stringify(S.macros);
+  page.append(chips,
+    el('div', {class:'card'},
+      el('h3', {}, `Macro M${i}`),
+      el('p', {}, 'Gõ chữ bình thường để bàn phím tự gõ ra. Dùng các nút dưới đây để chèn phím đặc biệt, hoặc bấm "Ghi từ bàn phím" rồi gõ.'),
+      ta, toks,
+      el('div', {class:'row'},
+        el('button', {class:'btn primary', disabled: !dirty, onclick: saveMacros}, 'Lưu vào bàn phím'),
+        el('button', {class:'btn', disabled: !dirty, onclick: () => { draft = [...S.macros]; renderConfig(); }}, 'Hoàn tác'),
+        recBtn,
+        el('span', {style:'flex:1'}),
+        el('button', {class:'btn danger', onclick: resetMacros}, 'Xóa tất cả macro')),
+      el('div', {class:'meter', style:'margin-top:14px'}, meterBar), meterTxt),
+    el('p', {class:'note', style:'margin-top:14px'}, 'Cú pháp: ', el('code', {}, '{KC_A}'), ' nhấn phím · ', el('code', {}, '{KC_LCTL,KC_C}'), ' tổ hợp · ', el('code', {}, '{+KC_LSFT}'), ' / ', el('code', {}, '{-KC_LSFT}'), ' giữ / nhả · ', el('code', {}, '{200}'), ' chờ 200 ms. Không gõ được tiếng Việt có dấu. Gán macro vào phím ở mục Gán phím → Macro.'));
+  updMeter();
+  return page;
+}
+function toggleRecord(ta, btn){
+  if (recording){
+    window.removeEventListener('keydown', recording.h, true); window.removeEventListener('keyup', recording.h, true);
+    const ev = recording.ev, still = [...recording.down].reverse(); recording = null;
+    for (const c of still) ev.push([3, c]); // nhả các phím chưa nhận được sự kiện nhả
+    const bytes = [];
+    for (let i = 0; i < ev.length; i++){
+      const [t, c] = ev[i];
+      if (t === 2 && ev[i+1] && ev[i+1][0] === 3 && ev[i+1][1] === c && !(c >= 0xE0 && c <= 0xE7)){ bytes.push(1, 1, c); i++; }
+      else bytes.push(1, t, c);
+    }
+    const txt = macroDecode(bytes);
+    ta.value += txt; ta.dispatchEvent(new Event('input'));
+    btn.textContent = '● Ghi từ bàn phím'; btn.classList.remove('rec');
+    toast(txt ? 'Đã ghi macro' : 'Không ghi được phím nào');
+    return;
+  }
+  const ev = [], down = new Set();
+  const h = e => {
+    if (e.target === btn) return;
+    const c = CODE_TO_HID[e.code]; if (c == null) return;
+    e.preventDefault(); e.stopPropagation();
+    if (e.type === 'keydown'){ if (down.has(c)) return; down.add(c); ev.push([2, c]); return; }
+    // macOS: khi giữ Cmd, trình duyệt không gửi keyup cho các phím khác → nhả chúng trước khi nhả Cmd
+    if (c === 0xE3 || c === 0xE7) for (const o of [...down].reverse()) if (o < 0xE0){ down.delete(o); ev.push([3, o]); }
+    if (!down.has(c)) return;
+    down.delete(c); ev.push([3, c]);
+  };
+  recording = {ev, h, down};
+  window.addEventListener('keydown', h, true); window.addEventListener('keyup', h, true);
+  btn.textContent = '■ Dừng ghi'; btn.classList.add('rec'); btn.blur();
+  toast('Đang ghi… gõ phím rồi bấm "Dừng ghi"');
+}
+async function saveMacros(){
+  try { S.busy = true; renderNav(); await writeMacros(draft); toast('Đã lưu macro vào bàn phím'); } catch (e){ toast(e.message, true); }
+  S.busy = false; progress(null); renderNav(); renderConfig();
+}
+async function resetMacros(){
+  if (!confirm('Xóa toàn bộ macro trong bàn phím?')) return;
+  try { await S.t.send([CMD.MACRO_RESET]); await readMacros(); draft = [...S.macros]; renderConfig(); toast('Đã xóa macro'); } catch (e){ toast(e.message, true); }
+}
+
+/* ====================================================================
+   Đèn
+   ==================================================================== */
+const LIGHT_IDS = { rgblight: {bright:[0x80], effect:[0x81], speed:[0x82], color:[0x83]}, backlight: {bright:[0x09], effect:[0x0A]} };
+function lightIds(){ if (!S.light) return null; if (S.light.mode === 'v12'){ const c = S.light.ch; return {bright:[c,1], effect:[c,2], speed:[c,3], color:[c,4]}; } return LIGHT_IDS[S.light.mode]; }
+async function lightProbe(){
+  S.light = null;
+  if (S.proto >= 12){ for (const ch of [3,2,1]){ const r = await S.t.send([CMD.LIGHT_GET, ch, 1]); if (r[0] !== CMD.UNHANDLED){ S.light = {mode:'v12', ch}; break; } } }
+  else {
+    const r = await S.t.send([CMD.LIGHT_GET, 0x80]);
+    if (r[0] !== CMD.UNHANDLED) S.light = {mode:'rgblight'};
+    else { const r2 = await S.t.send([CMD.LIGHT_GET, 0x09]); if (r2[0] !== CMD.UNHANDLED) S.light = {mode:'backlight'}; }
+  }
+  if (!S.light) return;
+  const ids = lightIds(); S.light.vals = {};
+  for (const [k, id] of Object.entries(ids)){ const r = await S.t.send([CMD.LIGHT_GET, ...id]); S.light.vals[k] = r[0] === CMD.UNHANDLED ? null : [...r.slice(1 + id.length, 1 + id.length + 2)]; }
+}
+async function lightSet(k, vals){ const id = lightIds()[k]; try { await S.t.send([CMD.LIGHT_SET, ...id, ...vals]); S.light.vals[k] = vals; } catch (e){ toast(e.message, true); } }
+function hsvToHex(h, s, v=255){ h = h/255*360; s /= 255; v /= 255; const f = n => { const k = (n + h/60) % 6; return v - v*s*Math.max(0, Math.min(k, 4-k, 1)); }; return '#' + [f(5),f(3),f(1)].map(x => hex(Math.round(x*255))).join('').toLowerCase(); }
+function hexToHs(c){ const r = parseInt(c.slice(1,3),16)/255, g = parseInt(c.slice(3,5),16)/255, b = parseInt(c.slice(5,7),16)/255; const mx = Math.max(r,g,b), mn = Math.min(r,g,b), d = mx - mn; let h = 0; if (d){ if (mx === r) h = ((g-b)/d) % 6; else if (mx === g) h = (b-r)/d + 2; else h = (r-g)/d + 4; } h = (h*60 + 360) % 360; return [Math.round(h/360*255), Math.round((mx ? d/mx : 0)*255)]; }
+function renderLightPane(){
+  const page = el('div', {class:'page'});
+  const shortcut = el('div', {class:'card'}, el('h3', {}, 'Chỉnh đèn bằng phím tắt'),
+    el('p', {}, 'Trên AULA F65, đèn được điều khiển bằng tổ hợp Fn ngay trên bàn phím:'),
+    el('div', {class:'kv'},
+      el('div', {}, 'Fn + \\'), el('div', {}, 'Đổi hiệu ứng đèn'),
+      el('div', {}, 'Fn + Tab'), el('div', {}, 'Đổi màu đèn'),
+      el('div', {}, 'Fn + ↑ / ↓'), el('div', {}, 'Tăng / giảm độ sáng'),
+      el('div', {}, 'Fn + → / ←'), el('div', {}, 'Tăng / giảm tốc độ hiệu ứng'),
+      el('div', {}, 'Fn + R Shift'), el('div', {}, 'Hiệu ứng đèn cạnh'),
+      el('div', {}, 'Fn + , . /'), el('div', {}, 'Tốc độ / độ sáng / màu đèn cạnh')),
+    el('p', {style:'margin:12px 0 0'}, 'Muốn đặt các chức năng này vào phím khác: vào Gán phím → Chức năng AULA.'));
+  if (!S.light){
+    page.append(el('div', {class:'cards'}, el('div', {class:'card'}, el('h3', {}, 'Không chỉnh trực tiếp được'),
+      el('p', {}, connected() ? 'Firmware của bàn phím này không cho phép chỉnh đèn từ máy tính qua giao thức VIA (đã kiểm thử trên AULA F65 thật).' : 'Kết nối bàn phím để xem.')), shortcut));
+    return page;
+  }
+  const v = S.light.vals, card = el('div', {class:'card'}, el('h3', {}, 'Đèn nền'), el('p', {}, 'Thay đổi áp dụng ngay. Bấm "Lưu" để giữ sau khi rút cáp.'));
+  const slider = (k, label, max) => {
+    if (!v[k]) return;
+    const out = el('b', {}, String(v[k][0])), r = el('input', {type:'range', min:0, max, value: v[k][0], style:'width:100%'});
+    r.addEventListener('input', () => out.textContent = r.value); r.addEventListener('change', () => lightSet(k, [+r.value]));
+    card.append(el('div', {style:'margin-bottom:12px'}, el('div', {class:'note', style:'margin:0 0 4px'}, label, ' ', out), r));
+  };
+  slider('bright', 'Độ sáng', 255);
+  if (v.effect){ const n = el('input', {type:'number', min:0, max:255, value: v.effect[0], style:'width:80px'}); n.addEventListener('change', () => lightSet('effect', [+n.value]));
+    card.append(el('div', {class:'row', style:'margin-bottom:12px'}, el('span', {class:'note', style:'margin:0'}, 'Hiệu ứng'), el('button', {class:'btn', onclick: () => { n.value = Math.max(0, +n.value - 1); lightSet('effect', [+n.value]); }}, '◀'), n, el('button', {class:'btn', onclick: () => { n.value = +n.value + 1; lightSet('effect', [+n.value]); }}, '▶'))); }
+  slider('speed', 'Tốc độ', 255);
+  if (v.color){ const c = el('input', {type:'color', value: hsvToHex(v.color[0], v.color[1])}); c.addEventListener('change', () => lightSet('color', hexToHs(c.value)));
+    card.append(el('div', {class:'row', style:'margin-bottom:12px'}, el('span', {class:'note', style:'margin:0'}, 'Màu'), c)); }
+  card.append(el('button', {class:'btn primary', onclick: async () => { try { await S.t.send(S.light.mode === 'v12' ? [CMD.LIGHT_SAVE, S.light.ch] : [CMD.LIGHT_SAVE]); toast('Đã lưu cài đặt đèn'); } catch (e){ toast(e.message, true); } }}, 'Lưu'));
+  page.append(el('div', {class:'cards'}, card, shortcut));
+  return page;
+}
+
+/* ====================================================================
+   Lưu & Tải
+   ==================================================================== */
+function renderSavePane(){
+  const page = el('div', {class:'page'});
+  const fi = el('input', {type:'file', accept:'.json,application/json', hidden: true});
+  fi.onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importBackup(f); };
+  page.append(el('div', {class:'cards'},
+    el('div', {class:'card'}, el('h3', {}, 'Lưu cấu hình'), el('p', {}, 'Xuất toàn bộ sơ đồ phím (cả 4 lớp) và macro ra file .json. Nên lưu trước khi chỉnh sửa.'),
+      el('button', {class:'btn primary', disabled: !connected(), onclick: exportBackup}, icon('save', 15), 'Lưu ra file')),
+    el('div', {class:'card'}, el('h3', {}, 'Tải cấu hình'), el('p', {}, 'Nạp lại một file đã lưu và ghi vào bàn phím.'),
+      el('button', {class:'btn', disabled: !connected(), onclick: () => fi.click()}, 'Chọn file…'), fi),
+    el('div', {class:'card'}, el('h3', {}, 'Về mặc định'), el('p', {}, 'Đặt lại toàn bộ sơ đồ phím về cài đặt gốc của nhà sản xuất. Macro không bị ảnh hưởng.'),
+      el('button', {class:'btn danger', disabled: !connected(), onclick: resetKeymap}, 'Đặt lại sơ đồ phím'))));
+  return page;
+}
+async function exportBackup(){
+  const C = S.def.matrix.cols;
+  const layers = S.keymap.map(l => S.keys.map(k => ({rc: `${k.row},${k.col}`, kc: kcInfo(l[k.row*C + k.col]).name, code: '0x' + hex(l[k.row*C + k.col], 4)})));
+  download(`aula-f65-backup-${new Date().toISOString().slice(0,10)}.json`, {
+    app: 'aula-f65-configurator', name: S.def.name, vid: '0x'+hex(S.t.vid,4), pid: '0x'+hex(S.t.pid,4), protocol: S.proto, keycodeVersion: S.KC.ver,
+    layers, macros: S.macros.slice(0, S.macroCount)});
+}
+async function importBackup(file){
+  let data; try { data = JSON.parse(await file.text()); } catch { return toast('File không phải JSON hợp lệ', true); }
+  if (!Array.isArray(data.layers)) return toast('File sao lưu không đúng định dạng', true);
+  if (data.keycodeVersion && data.keycodeVersion !== S.KC.ver && !confirm(`File được tạo với bảng mã v${data.keycodeVersion}, bàn phím đang dùng v${S.KC.ver}. Vẫn tải (dùng tên phím để chuyển đổi)?`)) return;
+  const C = S.def.matrix.cols; let n = 0, changed = 0, bad = 0; const total = Math.min(data.layers.length, S.layers) * S.keys.length;
+  S.busy = true; renderNav();
+  try {
+    for (let l = 0; l < Math.min(data.layers.length, S.layers); l++){
+      for (const ent of data.layers[l]){
+        const k = S.keys.find(k => `${k.row},${k.col}` === ent.rc); if (!k) continue;
+        let code = data.keycodeVersion === S.KC.ver ? parseInt(ent.code, 16) : parseKc(ent.kc);
+        if (code == null || isNaN(code)) code = parseKc(ent.kc) ?? parseInt(ent.code, 16);
+        if (code == null || isNaN(code)){ bad++; continue; }
+        if (S.keymap[l][k.row*C + k.col] !== code){ await S.t.send([CMD.KM_SET, l, k.row, k.col, code >> 8, code & 0xFF]); S.keymap[l][k.row*C + k.col] = code; changed++; }
+        progress(++n / total);
+      }
+    }
+    if (Array.isArray(data.macros) && S.macroCount){ await writeMacros(Array.from({length: S.macroCount}, (_, i) => data.macros[i] || '')); draft = null; }
+    toast(`Đã tải cấu hình: ${changed} phím thay đổi${bad ? `, ${bad} phím bỏ qua` : ''}`);
+  } catch (e){ toast(e.message, true); }
+  S.busy = false; progress(null); renderAll();
+}
+async function resetKeymap(){
+  if (!confirm('Đặt lại toàn bộ sơ đồ phím (cả 4 lớp) về mặc định của nhà sản xuất?')) return;
+  try { await S.t.send([CMD.KM_RESET]); await readKeymap(); progress(null); S.sel = null; renderAll(); toast('Đã đặt lại sơ đồ phím'); } catch (e){ toast(e.message, true); }
+}
+
+/* ====================================================================
+   Trang Cài đặt
+   ==================================================================== */
+function renderSettings(){
+  const page = el('div', {class:'page'});
+  const info = el('div', {class:'kv'});
+  const rows = S.t ? [['Thiết bị', S.t.name], ['VID : PID', `0x${hex(S.t.vid,4)} : 0x${hex(S.t.pid,4)}`], ['Giao thức VIA', `v${S.proto}`],
+    ['Bảng mã keycode', `v${S.KC.ver}${S.KC.T.USER === 0x7F00 ? ' (phím AULA 0x7F00+)' : ''}`], ['Số lớp', S.layers],
+    ['Macro', S.macroCount ? `${S.macroCount} macro, ${S.macroSize} byte` : 'không hỗ trợ'], ['Đèn qua VIA', S.light ? S.light.mode : 'không']]
+    : [['Trạng thái', 'Chưa kết nối']];
+  for (const [k, v] of rows) info.append(el('div', {}, k), el('div', {}, String(v)));
+  const sel = el('select');
+  for (const [v, t] of [['auto','Tự động (khuyên dùng)'],['10','VIA cũ (v10)'],['12','VIA mới (v12)']]) sel.append(el('option', {value: v, selected: S.kcPref === v}, t));
+  sel.onchange = () => { S.kcPref = sel.value; lsSet('aula.kcVer', S.kcPref); rebuildKC(); renderAll(); };
+  const fd = el('input', {type:'file', accept:'.json,application/json', hidden: true});
+  fd.onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    try { setDef(JSON.parse(await f.text()), true); S.sel = null; if (S.t) await useTransport(S.t); else renderAll(); toast('Đã nạp định nghĩa ' + S.def.name); } catch (err){ toast(err.message, true); }
+  };
+  page.append(el('div', {class:'cards'},
+    el('div', {class:'card'}, el('h3', {}, 'Thiết bị'), el('p', {}, S.status || 'Kết nối bàn phím để xem thông tin.'), info,
+      el('div', {class:'row', style:'margin-top:14px'},
+        S.t ? el('button', {class:'btn', onclick: () => disconnect()}, 'Ngắt kết nối') : el('button', {class:'btn primary', disabled: !('hid' in navigator), onclick: () => connect(false)}, 'Kết nối'),
+        el('button', {class:'btn ghost', disabled: !('hid' in navigator), title:'Dùng khi không thấy bàn phím trong danh sách', onclick: () => connect(true)}, 'Hiện mọi thiết bị HID'),
+        el('button', {class:'btn ghost', onclick: () => useTransport(new MockTransport(S.def))}, 'Chế độ thử'))),
+    el('div', {class:'card'}, el('h3', {}, 'Bảng mã keycode'), el('p', {}, 'Chỉ đổi khi tên phím hiển thị sai (ví dụ phím Fn hiện thành mã hex lạ).'), sel),
+    el('div', {class:'card'}, el('h3', {}, 'File định nghĩa bàn phím'),
+      el('p', {}, `Đang dùng: ${S.def.name} — ${S.keys.length} phím, ${(S.def.customKeycodes||[]).length} chức năng riêng.`),
+      el('div', {class:'row'}, el('button', {class:'btn', onclick: () => fd.click()}, 'Nạp file VIA JSON…'),
+        el('button', {class:'btn ghost', onclick: async () => { setDef(DEFAULT_DEF, false); S.sel = null; if (S.t) await useTransport(S.t); else renderAll(); toast('Đang dùng định nghĩa AULA F65 có sẵn'); }}, 'Dùng AULA F65 mặc định'), fd))));
+  return page;
+}
+
+/* ====================================================================
+   Kiểm tra phím
+   ==================================================================== */
+let testTimer = null, testMatrix = false, testHint = '';
+function renderTestPage(){
+  const page = el('div', {class:'page'});
+  page.append(el('div', {class:'row'}, el('button', {class:'btn', onclick: () => { for (const k of S.keys) k.el?.classList.remove('was','hit'); $('#testLast').textContent = ''; }}, 'Xóa kết quả'),
+    el('span', {class:'note', id:'testLast', style:'margin:0'})),
+    el('p', {class:'note', style:'margin-top:12px'}, 'Phím đang nhấn có màu xanh đậm, phím đã nhấn có màu xanh nhạt. Phím Fn và các phím chức năng AULA không gửi tín hiệu tới máy tính nên sẽ không sáng.'));
+  return page;
+}
+function startTester(){
+  stopTester(); testMatrix = false;
+  testHint = 'Nhấn từng phím trên bàn phím để kiểm tra.';
+  if (!S.t || !S.keymap || S.profile.noMatrix || S.t.mock){ renderSel(); return; }
+  const bpr = Math.ceil(S.def.matrix.cols / 8);
+  testMatrix = true;
+  const tick = async () => {
+    if (!S.t || S.page !== 'test') return;
+    try {
+      const r = await S.t.send([CMD.GET_KB, 0x03]);
+      if (r[0] === CMD.UNHANDLED){ testMatrix = false; return; }
+      for (const k of S.keys){ const on = (r[2 + k.row*bpr + (bpr-1-(k.col>>3))] >> (k.col & 7)) & 1; k.el.classList.toggle('hit', !!on); if (on) k.el.classList.add('was'); }
+    } catch { testMatrix = false; return; }
+    testTimer = setTimeout(tick, 40);
+  };
+  tick(); renderSel();
+}
+function stopTester(){ clearTimeout(testTimer); testTimer = null; testMatrix = false; for (const k of S.keys) k.el?.classList.remove('hit'); }
+
+const CODE_TO_HID = (() => {
+  const m = {Enter:0x28, Escape:0x29, Backspace:0x2A, Tab:0x2B, Space:0x2C, Minus:0x2D, Equal:0x2E, BracketLeft:0x2F, BracketRight:0x30, Backslash:0x31,
+    Semicolon:0x33, Quote:0x34, Backquote:0x35, Comma:0x36, Period:0x37, Slash:0x38, CapsLock:0x39, PrintScreen:0x46, ScrollLock:0x47, Pause:0x48,
+    Insert:0x49, Home:0x4A, PageUp:0x4B, Delete:0x4C, End:0x4D, PageDown:0x4E, ArrowRight:0x4F, ArrowLeft:0x50, ArrowDown:0x51, ArrowUp:0x52,
+    NumLock:0x53, NumpadDivide:0x54, NumpadMultiply:0x55, NumpadSubtract:0x56, NumpadAdd:0x57, NumpadEnter:0x58, Numpad0:0x62, NumpadDecimal:0x63,
+    IntlBackslash:0x64, ContextMenu:0x65, ControlLeft:0xE0, ShiftLeft:0xE1, AltLeft:0xE2, MetaLeft:0xE3, ControlRight:0xE4, ShiftRight:0xE5, AltRight:0xE6, MetaRight:0xE7};
+  for (let i = 0; i < 26; i++) m['Key' + String.fromCharCode(65+i)] = 0x04 + i;
+  for (let i = 1; i <= 9; i++){ m['Digit'+i] = 0x1D + i; m['Numpad'+i] = 0x58 + i; }
+  m.Digit0 = 0x27;
+  for (let i = 1; i <= 12; i++) m['F'+i] = 0x39 + i;
+  for (let i = 13; i <= 24; i++) m['F'+i] = 0x68 + i - 13;
+  return m;
+})();
+function keysFromEvent(e){
+  const hid = CODE_TO_HID[e.code]; if (hid == null) return [];
+  return S.keys.filter(k => getKc(0, k) === hid);
+}
+document.addEventListener('keydown', e => {
+  if (S.page !== 'test' || recording || e.target.closest?.('input,textarea,select')) return;
+  e.preventDefault();
+  const last = $('#testLast'); if (last) last.textContent = `Phím vừa nhấn: ${e.code}`;
+  if (testMatrix) return;
+  const ks = keysFromEvent(e);
+  for (const k of ks) k.el.classList.add('hit','was');
+  // macOS chỉ báo keyup của Caps Lock khi tắt khóa → tự tắt đèn sau một lúc
+  if (e.code === 'CapsLock') setTimeout(() => ks.forEach(k => k.el.classList.remove('hit')), 250);
+});
+document.addEventListener('keyup', e => {
+  if (S.page !== 'test' || testMatrix) return;
+  // macOS: khi giữ Cmd, các phím khác không có keyup → nhả Cmd thì tắt hết
+  if (e.code === 'MetaLeft' || e.code === 'MetaRight'){ for (const k of S.keys) k.el?.classList.remove('hit'); return; }
+  for (const k of keysFromEvent(e)) k.el.classList.remove('hit');
+});
+window.addEventListener('blur', () => { for (const k of S.keys) k.el?.classList.remove('hit'); });
+
+/* ====================================================================
+   Khởi động
+   ==================================================================== */
+function renderAll(){ renderNav(); renderStage(); renderConfig(); }
+let rT; window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(renderStage, 120); });
+
+(async function init(){
+  let def = DEFAULT_DEF;
+  const saved = lsGet('aula.def'); if (saved){ try { def = JSON.parse(saved); } catch {} }
+  try { setDef(def); } catch { setDef(DEFAULT_DEF); }
+  renderAll();
+  if (!('hid' in navigator)) return;
+  navigator.hid.addEventListener('disconnect', e => { if (S.t && S.t.dev === e.device){ toast('Bàn phím đã bị rút ra', true); disconnect(); } });
+  try {
+    const vid = toInt(S.def.vendorId);
+    const devs = (await navigator.hid.getDevices()).filter(d => d.vendorId === vid && d.collections.some(c => c.usagePage === 0xFF60));
+    if (devs.length) await useTransport(new HidTransport(devs[0]));
+  } catch {}
+})();
+</script>
+</body>
+</html>
