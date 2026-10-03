@@ -67,6 +67,9 @@ svg{flex:none}
 @keyframes ring{0%,100%{box-shadow:0 0 0 2px #fff,0 0 10px 2px rgba(91,140,240,.7)}50%{box-shadow:0 0 0 2px #fff,0 0 22px 6px rgba(91,140,240,.9)}}
 .key.was{background:#2c8a5c} .key.was .cap{background:#7fd9ab;color:#0d2a1b}
 .key.hit{background:#1e7a4d} .key.hit .cap{background:var(--ok);color:#06210f}
+.key.locked{cursor:not-allowed}
+.key.locked .cap::after{content:'🔒';position:absolute;top:1px;right:3px;font-size:8px;opacity:.75}
+.key.locked:hover{transform:none}
 .dim .key{pointer-events:none}
 .dim .case{filter:saturate(.4) brightness(.55)}
 .overlay{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
@@ -512,6 +515,25 @@ const isFactoryDef = () => toInt(S.def.vendorId) === 0x258A && toInt(S.def.produ
 const viewKeymap = () => S.keymap || (isFactoryDef() ? FACTORY_KEYMAP : null);
 const getKc = (l, k, km = viewKeymap()) => km?.[l]?.[k.row * S.def.matrix.cols + k.col];
 const connected = () => !!S.t && !!S.keymap;
+
+/* System keys locked by default (AULA F65 only). Remapping them by mistake can lose the Fn layer,
+   lose the way to switch wireless / Win-Mac modes, or accidentally create a keyboard-reset key.
+   Locked positions follow the factory keymap: Fn (MO) on every layer; on Fn layers: 2.4G, BT1–3, Win, Mac, Reset. */
+const LOCK_CODES = new Set([0x7F00, 0x7F01, 0x7F02, 0x7F03, 0x7F04, 0x7F0F, 0x7F12, 0x7F13, 0x7F14]);
+const HIDDEN_AULA = ['KEYBOARD_RESET', 'EMI_TEST'];
+let unlocked = lsGet('aula.unlock') === '1';
+function lockReason(l, k){
+  if (unlocked || !isFactoryDef()) return null;
+  const c = FACTORY_KEYMAP[l]?.[k.row * 16 + k.col];
+  if (c >= 0x5220 && c <= 0x523F) return 'fn';
+  if (LOCK_CODES.has(c)) return 'sys';
+  return null;
+}
+const LOCK_MSG = {
+  fn: 'The Fn key is locked: if you change it you lose access to the Fn layer (connection, lighting, Win/Mac…). You can unlock it in Settings.',
+  sys: 'System keys (connection switching, Win/Mac, Reset) are locked to prevent mistakes. You can unlock them in Settings.',
+};
+const isMO = c => c != null && S.KC && c >= S.KC.T.MO && c < S.KC.T.MO + 16;
 const layerName = l => (S.t ? S.profile : PROFILES['258A:010C'])?.layerNames?.[l] ?? (l === 0 ? 'Base' : `Layer ${l}`);
 
 /* ====================================================================
@@ -599,6 +621,7 @@ function paintKey(k, layer){
   if (code == null){ k.lbl.textContent = ''; k.el.title = `Matrix ${k.row},${k.col}`; }
   else {
     const i = {...kcInfo(code)}; i.label = keyLabel(i, layer);
+    if (isFactoryDef() && isMO(code)) i.label = 'Fn'; // the AULA Fn key = MO(Fn layer)
     k.lbl.textContent = i.label;
     k.el.title = `${i.title}\n${i.name} · 0x${hex(code,4)} · matrix ${k.row},${k.col}`;
     if (code === 1) cls += ' trns'; else if (i.group === 'aula') cls += ' custom'; else if (i.group?.startsWith('layer')) cls += ' layer';
@@ -608,9 +631,10 @@ function paintKey(k, layer){
   }
   k.cap.className = cls;
   k.el.classList.toggle('sel', S.page === 'configure' && S.sel === k);
+  k.el.classList.toggle('locked', S.page === 'configure' && connected() && !!lockReason(layer, k));
 }
 function repaint(){ const layer = S.page === 'configure' ? S.layer : 0; for (const k of S.keys) if (k.el) paintKey(k, layer); renderSel(); }
-function selectKey(k){ if (!connected()) return; S.sel = S.sel === k ? null : k; if (S.sel) S.menu = 'keymap'; repaint(); syncHint(); if (S.menu === 'keymap' && !$('.grid-area')) renderConfig(); }
+function selectKey(k){ if (!connected()) return; const why = lockReason(S.layer, k); if (why){ toast(LOCK_MSG[why], true); return; } S.sel = S.sel === k ? null : k; if (S.sel) S.menu = 'keymap'; repaint(); syncHint(); if (S.menu === 'keymap' && !$('.grid-area')) renderConfig(); }
 function syncHint(){ const n = $('#pickHint'); if (n) n.hidden = !!S.sel; }
 function renderSel(){
   const box = $('#selinfo'); box.innerHTML = '';
@@ -669,7 +693,7 @@ function renderKeymapPane(content){
     case 'media': area.append(...section('Audio & playback', grp('media')), ...section('Apps & system', grp('app'))); break;
     case 'mouse': area.append(el('p', {class:'note'}, 'Control the mouse pointer from the keyboard. Depending on the firmware, some of these may not work.'), ...section('Mouse', grp('mouse'))); break;
     case 'aula': {
-      const all = grp('aula'), used = new Set(), pick = names => all.filter(e => names.includes(e.name) && used.add(e.name));
+      const all = grp('aula').filter(e => unlocked || !HIDDEN_AULA.includes(e.name)), used = new Set(), pick = names => all.filter(e => names.includes(e.name) && used.add(e.name));
       area.append(el('p', {class:'note'}, 'AULA F65-specific functions. By default they live on the "Win + Fn" and "Mac + Fn" layers (hold Fn and press the key).'));
       for (const [t, names] of [
         ['Connection', ['USB_MODE','2_4G_MODE','BLUETOOTH_1','BLUETOOTH_2','BLUETOOTH_3','BATTERY_VIEW']],
@@ -684,7 +708,8 @@ function renderKeymapPane(content){
     }
     case 'layer': {
       area.append(el('p', {class:'note'}, 'MO = hold to use a layer · TG = toggle a layer · TO = switch to a layer · TT = hold, or tap repeatedly to toggle · OSL = layer for one key press · DF = change the default layer.'));
-      for (const p of ['MO','TG','TO','TT','OSL','DF']) area.append(...section(p, grp('layer').filter(e => e.name.startsWith(p + '('))));
+      if (!unlocked) area.append(el('p', {class:'note'}, 'TO and DF are hidden because they can leave the keyboard stuck on a layer. Unlock them in Settings if needed.'));
+      for (const p of unlocked ? ['MO','TG','TO','TT','OSL','DF'] : ['MO','TG','TT','OSL']) area.append(...section(p, grp('layer').filter(e => e.name.startsWith(p + '('))));
       break;
     }
     case 'macro':
@@ -727,11 +752,13 @@ async function assign(code){
   if (!connected()) return toast('Keyboard not connected', true);
   if (!S.sel) return toast('Click a key on the keyboard first', true);
   const k = S.sel, C = S.def.matrix.cols;
+  const why = lockReason(S.layer, k); if (why){ S.sel = null; repaint(); return toast(LOCK_MSG[why], true); }
   try {
     const r = await S.t.send([CMD.KM_SET, S.layer, k.row, k.col, code >> 8, code & 0xFF]);
     if (r[0] === CMD.UNHANDLED) throw new Error('The keyboard rejected the key write');
     S.keymap[S.layer][k.row*C + k.col] = code;
-    const idx = S.keys.indexOf(k); S.sel = S.keys[idx + 1] || null;
+    // move to the next key, skipping locked ones
+    const idx = S.keys.indexOf(k); S.sel = S.keys.slice(idx + 1).find(n => !lockReason(S.layer, n)) || null;
     repaint(); syncHint();
   } catch (e){ toast(e.message, true); }
 }
@@ -1064,6 +1091,7 @@ async function importBackup(file){
     for (let l = 0; l < Math.min(data.layers.length, S.layers); l++){
       for (const ent of data.layers[l]){
         const k = S.keys.find(k => `${k.row},${k.col}` === ent.rc); if (!k) continue;
+        if (lockReason(l, k)) continue; // leave locked keys untouched
         let code = data.keycodeVersion === S.KC.ver ? parseInt(ent.code, 16) : parseKc(ent.kc);
         if (code == null || isNaN(code)) code = parseKc(ent.kc) ?? parseInt(ent.code, 16);
         if (code == null || isNaN(code)){ bad++; continue; }
@@ -1084,6 +1112,17 @@ async function resetKeymap(){
 /* ====================================================================
    Settings page
    ==================================================================== */
+function lockCard(){
+  const cb = el('input', {type:'checkbox'}); cb.checked = !unlocked;
+  cb.onchange = () => {
+    if (!cb.checked && !confirm('Unlock system keys?\n\nIf you remap the Fn key or the connection keys by mistake, you may lose those functions until you use "Reset keymap".')){ cb.checked = true; return; }
+    unlocked = !cb.checked; lsSet('aula.unlock', unlocked ? '1' : null); S.sel = null; renderAll();
+    toast(unlocked ? 'System keys unlocked — be careful' : 'System keys locked again');
+  };
+  return el('div', {class:'card'}, el('h3', {}, 'Lock system keys'),
+    el('p', {}, 'Protects important keys from accidental changes: the Fn key on all 4 layers; on the Fn layers: connection switching (2.4G, BT1–3), Win/Mac switching and Reset. Also hides Keyboard Reset, EMI Test, TO and DF from the picker.'),
+    el('label', {class:'chk', style:'color:var(--text)'}, cb, 'Lock system keys (recommended)'));
+}
 function renderSettings(){
   const page = el('div', {class:'page'});
   const info = el('div', {class:'kv'});
@@ -1106,6 +1145,7 @@ function renderSettings(){
         S.t ? el('button', {class:'btn', onclick: () => disconnect()}, 'Disconnect') : el('button', {class:'btn primary', disabled: !('hid' in navigator), onclick: () => connect(false)}, 'Connect'),
         el('button', {class:'btn ghost', disabled: !('hid' in navigator), title:'Use this if your keyboard is not in the list', onclick: () => connect(true)}, 'Show all HID devices'),
         el('button', {class:'btn ghost', onclick: () => useTransport(new MockTransport(S.def))}, 'Demo mode'))),
+    lockCard(),
     el('div', {class:'card'}, el('h3', {}, 'Keycode table'), el('p', {}, 'Only change this if key names look wrong (e.g. the Fn key shows a strange hex code).'), sel),
     el('div', {class:'card'}, el('h3', {}, 'Keyboard definition file'),
       el('p', {}, `In use: ${S.def.name} — ${S.keys.length} keys, ${(S.def.customKeycodes||[]).length} custom functions.`),
