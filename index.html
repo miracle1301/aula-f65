@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AULA F65 Configurator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='5' width='22' height='14' rx='3' fill='%23e27c62'/%3E%3Cpath d='M5 9h2M9 9h2M13 9h2M17 9h2M7 15h10' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#17181c; --bg2:#202127; --panel:#25262c; --panel2:#2d2e35; --panel3:#36373f; --line:#3b3c44;
@@ -12,14 +16,14 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
-body{background:var(--bg);color:var(--text);font:14px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;display:flex;flex-direction:column;min-height:100vh}
+body{background:var(--bg);color:var(--text);font:14px/1.45 Inter,"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;font-feature-settings:"cv11","ss01";display:flex;flex-direction:column;min-height:100vh}
 button,select,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 svg{flex:none}
 
 /* ---------- Thanh điều hướng ---------- */
 .nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:56px;padding:0 16px;background:var(--bg);border-bottom:1px solid #26272d}
-.brand{font-weight:700;letter-spacing:.5px;font-size:15px;display:flex;align-items:center;gap:8px}
+.brand{font-weight:700;letter-spacing:.5px;font-size:15px;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .brand b{color:var(--accent)}
 .lang{margin-left:4px;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:2px 7px;text-decoration:none}
 .lang:hover{color:var(--text);border-color:var(--accent)}
@@ -52,8 +56,9 @@ svg{flex:none}
 #kb{position:relative}
 .key{position:absolute;border-radius:6px;cursor:pointer;transition:transform .08s}
 .key .cap{position:absolute;left:4px;right:4px;top:3px;bottom:7px;border-radius:5px;display:flex;align-items:center;justify-content:center;text-align:center;padding:2px;overflow:hidden}
-.key .lbl{font-size:12px;font-weight:600;line-height:1.08;white-space:pre-line;word-break:break-word}
-.key.sm .lbl{font-size:10.5px} .key.xs .lbl{font-size:9px}
+/* Nhãn phím: một cỡ chữ chung (--kfs, theo kích thước bàn phím); chỉ phím nào tràn chữ mới được thu nhỏ.
+   translateZ(0) tắt làm mịn ClearType có viền màu trên Windows. */
+.key .lbl{display:block;width:100%;font-size:var(--kfs,13px);font-weight:600;letter-spacing:-.01em;line-height:1.2;white-space:pre;overflow:hidden;text-align:center;transform:translateZ(0)}
 .key:hover{transform:translateY(-1px)}
 .key.alpha{background:#c4c4c6} .key.alpha .cap{background:linear-gradient(#f1f1f2,#e2e2e4);color:#3b3b40}
 .key.mod{background:#808189} .key.mod .cap{background:linear-gradient(#acadb4,#9c9da5);color:#202024}
@@ -99,7 +104,7 @@ svg{flex:none}
 .sec-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:12px 0 8px}
 .sec-title:first-child{margin-top:0}
 .kgrid{display:flex;flex-wrap:wrap;gap:6px}
-.kc{width:58px;height:58px;border-radius:8px;border:1px solid #44454e;background:linear-gradient(#3b3c44,#33343b);color:var(--text);font-size:11.5px;font-weight:600;line-height:1.1;white-space:pre-line;padding:3px;display:grid;place-items:center;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+.kc{width:58px;height:58px;border-radius:8px;border:1px solid #44454e;background:linear-gradient(#3b3c44,#33343b);color:var(--text);font-size:12px;font-weight:600;letter-spacing:-.01em;line-height:1.2;white-space:pre;overflow:hidden;padding:3px;display:grid;place-items:center;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25);transform:translateZ(0)}
 .kc:hover{border-color:var(--accent);color:#fff;background:#45464f}
 .kc.w2{width:122px}
 .kc.custom{color:#ffb39f}
@@ -141,11 +146,11 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
   .navtabs{grid-column:1/-1;order:3;justify-content:center}
   .navtabs button{padding:6px 10px}
   .navtabs button span{display:none}
-  #config{grid-template-columns:1fr}
+  #config{grid-template-columns:1fr;grid-template-rows:auto 1fr}
   .menu{display:flex;overflow-x:auto;padding:0;border-right:none;border-bottom:1px solid var(--line)}
   .menu button{width:auto;border-left:none;border-bottom:3px solid transparent;padding:10px 14px;white-space:nowrap}
   .menu button.on{border-bottom-color:var(--accent)}
-  .content{flex-direction:column}
+  .content{flex-direction:column;min-height:0}
   .cats{width:auto;display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line);padding:0}
   .cats button{white-space:nowrap;width:auto}
   .grid-area{max-height:none}
@@ -385,11 +390,11 @@ function buildKC(ver, def, layerCount, userBase){
   add(0x35,'KC_GRV','~\n`','Phím ` ~','basic');
   const shifted = '!@#$%^&*()';
   '1234567890'.split('').forEach((d,i) => add(0x1E+i, 'KC_'+d, `${shifted[i]}\n${d}`, 'Phím '+d, 'basic'));
-  add(0x2D,'KC_MINS','_\n-',null,'basic'); add(0x2E,'KC_EQL','+\n=',null,'basic'); add(0x2A,'KC_BSPC','Back\nspace','Backspace','basic');
+  add(0x2D,'KC_MINS','_\n-',null,'basic'); add(0x2E,'KC_EQL','+\n=',null,'basic'); add(0x2A,'KC_BSPC','Backspace','Backspace','basic');
   add(0x2B,'KC_TAB','Tab',null,'basic');
   for (let i = 0; i < 26; i++){ const ch = String.fromCharCode(65+i); add(0x04+i, 'KC_'+ch, ch, 'Phím '+ch, 'basic'); }
   add(0x2F,'KC_LBRC','{\n[',null,'basic'); add(0x30,'KC_RBRC','}\n]',null,'basic'); add(0x31,'KC_BSLS','|\n\\',null,'basic');
-  add(0x39,'KC_CAPS','Caps\nLock','Caps Lock','basic'); add(0x33,'KC_SCLN',':\n;',null,'basic'); add(0x34,'KC_QUOT','"\n\'',null,'basic');
+  add(0x39,'KC_CAPS','Caps Lock','Caps Lock','basic'); add(0x33,'KC_SCLN',':\n;',null,'basic'); add(0x34,'KC_QUOT','"\n\'',null,'basic');
   add(0x28,'KC_ENT','Enter',null,'basic'); add(0x36,'KC_COMM','<\n,',null,'basic'); add(0x37,'KC_DOT','>\n.',null,'basic');
   add(0x38,'KC_SLSH','?\n/',null,'basic'); add(0x2C,'KC_SPC','Space',null,'basic');
   add(0xE0,'KC_LCTL','Ctrl','Ctrl trái','basic'); add(0xE1,'KC_LSFT','Shift','Shift trái','basic'); add(0xE2,'KC_LALT','Alt','Alt trái','basic'); add(0xE3,'KC_LGUI','Win','Windows trái','basic');
@@ -579,12 +584,14 @@ function renderStage(){
     const avail = Math.min(window.innerWidth - 32, 1100) - 28;
     const U = Math.max(28, Math.min(62, Math.floor(avail / W)));
     kb.style.width = W*U + 'px'; kb.style.height = H*U + 'px';
+    kb.style.setProperty('--kfs', Math.max(10, Math.min(14, Math.round(U * 0.22))) + 'px'); // cỡ chữ chung cho mọi phím
     const layer = S.page === 'configure' ? S.layer : 0;
     for (const k of S.keys){
       const c0 = getKc(0, k);
       const lbl = el('span', {class:'lbl'}), cap = el('div', {class:'cap'}, lbl);
       const e = el('div', {class: 'key ' + capType(c0 ?? 0x04), onclick: () => S.page === 'configure' && selectKey(k)}, cap);
-      Object.assign(e.style, {left: k.x*U + 'px', top: (k.y-minY)*U + 'px', width: k.w*U + 'px', height: k.h*U + 'px'});
+      const G = 1.5; // khe hở đều giữa các phím, tránh lộ chấm tối ở chỗ 4 góc phím gặp nhau
+      Object.assign(e.style, {left: k.x*U + G + 'px', top: (k.y-minY)*U + G + 'px', width: k.w*U - 2*G + 'px', height: k.h*U - 2*G + 'px'});
       k.el = e; k.cap = cap; k.lbl = lbl; kb.append(e);
       paintKey(k, layer);
     }
@@ -622,17 +629,31 @@ function paintKey(k, layer){
   else {
     const i = {...kcInfo(code)}; i.label = keyLabel(i, layer);
     if (isFactoryDef() && isMO(code)) i.label = 'Fn'; // phím Fn của AULA = MO(lớp Fn)
-    k.lbl.textContent = i.label;
+    setLabel(k.lbl, i.label);
     k.el.title = `${i.title}\n${i.name} · 0x${hex(code,4)} · ma trận ${k.row},${k.col}`;
     if (code === 1) cls += ' trns'; else if (i.group === 'aula') cls += ' custom'; else if (i.group?.startsWith('layer')) cls += ' layer';
-    const longest = Math.max(...i.label.split('\n').map(x => x.length));
-    k.el.classList.toggle('xs', longest > 6 || (longest > 4 && k.w < 1.2));
-    k.el.classList.toggle('sm', longest > 4 && !(longest > 6 || k.w < 1.2));
   }
   k.cap.className = cls;
+  fitText(k.lbl, 8, () => k.cap.clientHeight - 2);
   k.el.classList.toggle('sel', S.page === 'configure' && S.sel === k);
   k.el.classList.toggle('locked', S.page === 'configure' && connected() && !!lockReason(layer, k));
 }
+/* Giữ cỡ chữ chung; chỉ thu nhỏ dần (0.5px mỗi bước) khi nhãn thực sự tràn khỏi phím */
+function fitText(el, min, maxH){
+  el.style.fontSize = '';
+  if (!el.isConnected || !el.textContent) return;
+  let s = parseFloat(getComputedStyle(el).fontSize);
+  const over = () => el.scrollWidth > el.clientWidth + 0.5 || (maxH ? el.offsetHeight > maxH() : el.scrollHeight > el.clientHeight + 0.5);
+  while (s > min && over()){ s -= 0.5; el.style.fontSize = s + 'px'; }
+}
+/* Mũi tên vẽ bằng SVG: font Inter không có ký tự ←↑→↓ nên trình duyệt mượn font khác, nét không đều.
+   Dùng một hình duy nhất rồi xoay để 4 phím mũi tên giống hệt nhau. */
+const ARROW_DEG = {'↑': 0, '→': 90, '↓': 180, '←': 270};
+function setLabel(node, text){
+  if (ARROW_DEG[text] == null){ node.textContent = text; return; }
+  node.innerHTML = `<svg width="1.15em" height="1.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto;transform:rotate(${ARROW_DEG[text]}deg)"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg>`;
+}
+const fitPalette = () => requestAnimationFrame(() => $$('.kc').forEach(b => fitText(b, 8.5)));
 function repaint(){ const layer = S.page === 'configure' ? S.layer : 0; for (const k of S.keys) if (k.el) paintKey(k, layer); renderSel(); }
 function selectKey(k){ if (!connected()) return; const why = lockReason(S.layer, k); if (why){ toast(LOCK_MSG[why], true); return; } S.sel = S.sel === k ? null : k; if (S.sel) S.menu = 'keymap'; repaint(); syncHint(); if (S.menu === 'keymap' && !$('.grid-area')) renderConfig(); }
 function syncHint(){ const n = $('#pickHint'); if (n) n.hidden = !!S.sel; }
@@ -658,7 +679,7 @@ function renderConfig(){
   for (const [id, name] of MENUS) menu.append(el('button', {class: S.menu === id ? 'on' : '', onclick: () => { S.menu = id; renderConfig(); }}, icon(id), name));
   const content = el('div', {class:'content'});
   cfg.append(menu, content);
-  if (S.menu === 'keymap') renderKeymapPane(content);
+  if (S.menu === 'keymap'){ renderKeymapPane(content); fitPalette(); }
   else if (S.menu === 'macro') content.append(renderMacroPane());
   else if (S.menu === 'light') content.append(renderLightPane());
   else content.append(renderSavePane());
@@ -676,8 +697,10 @@ const BASIC_SECTIONS = [
   ['Hệ thống', [0x46,0x47,0x48]],
 ];
 function kcButton(e, wide){
-  return el('button', {class: 'kc' + (wide ? ' w2' : '') + (e.group === 'aula' ? ' custom' : e.group?.startsWith('layer') ? ' layer' : ''),
-    title: `${e.title}\n${e.name} · 0x${hex(e.code,4)}`, onclick: () => assign(e.code)}, keyLabel(e, S.layer) || '∅');
+  const b = el('button', {class: 'kc' + (wide ? ' w2' : '') + (e.group === 'aula' ? ' custom' : e.group?.startsWith('layer') ? ' layer' : ''),
+    title: `${e.title}\n${e.name} · 0x${hex(e.code,4)}`, onclick: () => assign(e.code)});
+  setLabel(b, keyLabel(e, S.layer) || '∅');
+  return b;
 }
 function section(title, entries, wide){ return [el('div', {class:'sec-title'}, title), el('div', {class:'kgrid'}, entries.filter(Boolean).map(e => kcButton(e, wide)))]; }
 function renderKeymapPane(content){
@@ -1235,6 +1258,7 @@ let rT; window.addEventListener('resize', () => { clearTimeout(rT); rT = setTime
   const saved = lsGet('aula.def'); if (saved){ try { def = JSON.parse(saved); } catch {} }
   try { setDef(def); } catch { setDef(DEFAULT_DEF); }
   renderAll();
+  document.fonts?.ready.then(() => { if (S.keys[0]?.el) repaint(); fitPalette(); }); // đo lại khi font Inter tải xong
   if (!('hid' in navigator)) return;
   navigator.hid.addEventListener('disconnect', e => { if (S.t && S.t.dev === e.device){ toast('Bàn phím đã bị rút ra', true); disconnect(); } });
   try {
