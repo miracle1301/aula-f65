@@ -282,6 +282,30 @@ body{background:var(--mesh);background-attachment:fixed}
 .devcard{background:var(--devcard)}
 .devcard .meta{color:var(--ov-muted)}
 
+/* Toast: small box in the centre of the keyboard card */
+#toast{position:fixed;left:50%;top:50%;bottom:auto;z-index:50;display:flex;align-items:flex-start;gap:12px;width:max-content;max-width:min(340px,calc(100vw - 32px));padding:14px 18px 14px 14px;border-radius:16px;
+  background:var(--toast-bg);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border:1px solid var(--line2);box-shadow:var(--spec),0 18px 50px rgba(0,0,0,.3);
+  text-align:left;font-size:13.5px;line-height:1.5;color:var(--text);
+  opacity:0;transform:translate(-50%,-50%) scale(.96);transition:opacity .16s,transform .16s;pointer-events:none}
+#toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+:root[data-theme="dark"] #toast{--toast-bg:rgba(22,22,25,.66)}
+:root[data-theme="light"] #toast{--toast-bg:rgba(255,255,255,.7)}
+#toast.err{border-color:var(--line2)}
+#toast .tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+#toast .tx b{font-weight:600;font-size:14px}
+#toast .tx span{color:color-mix(in srgb,var(--text) 74%,transparent);font-size:13px}
+#toast .tx .one{color:var(--text);font-weight:500;font-size:13.5px;padding-top:1px}
+/* icon in a small circle on the left */
+#toast::before{content:'';flex:none;width:30px;height:30px;border-radius:50%;
+  background:var(--text) center/16px no-repeat;
+  -webkit-mask:var(--ico) center/16px no-repeat,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:var(--ico) center/16px no-repeat exclude,linear-gradient(#000 0 0);
+  opacity:.9;
+  --ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4L18 8.5'/%3E%3C/svg%3E")}
+#toast.err::before{background:var(--err);
+  --ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 6.5v7M12 17.5h.01'/%3E%3C/svg%3E")}
+#toast.lock::before{background:var(--text);
+  --ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='9' rx='2'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E")}
+
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   :root[data-theme="dark"]{--surface:#15151c;--pop:#1c1c26} :root[data-theme="light"]{--surface:#fff;--pop:#fff}
 }
@@ -449,8 +473,15 @@ const ICONS = {
 const icon = (n, s=18) => { const sp = document.createElement('span'); sp.style.display = 'inline-flex'; sp.innerHTML = `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]}</svg>`; return sp; };
 let toastT;
 function toast(msg, err=false){
-  const t = $('#toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : '');
-  clearTimeout(toastT); toastT = setTimeout(() => t.className = '', err ? 5000 : 2400);
+  const t = $('#toast'), rich = Array.isArray(msg); // [title, description] or a single line
+  t.replaceChildren(el('div', {class:'tx'}, rich ? [el('b', {}, msg[0]), el('span', {}, msg[1])] : el('span', {class:'one'}, msg)));
+  t.className = 'show' + (err ? ' err' : '') + (rich ? ' lock' : '');
+  // centre on the keyboard card; if it has scrolled off screen, centre in the content area
+  const r = $('#stage').getBoundingClientRect(), m = $('.main').getBoundingClientRect();
+  const onScreen = r.bottom > 120 && r.top < innerHeight - 120;
+  t.style.left = (onScreen ? r.left + r.width / 2 : m.left + m.width / 2) + 'px';
+  t.style.top = (onScreen ? Math.min(Math.max(r.top + r.height / 2, 90), innerHeight - 90) : innerHeight / 2) + 'px';
+  clearTimeout(toastT); toastT = setTimeout(() => t.className = t.className.replace('show', '').trim(), err ? 2800 : 1500);
 }
 function progress(f){ const p = $('#prog'); if (f == null){ p.style.display = 'none'; return; } p.style.display = 'block'; p.firstElementChild.style.width = (f*100).toFixed(1) + '%'; }
 function lsGet(k){ try { return localStorage.getItem(k); } catch { return null; } }
@@ -707,8 +738,8 @@ function lockReason(l, k){
   return null;
 }
 const LOCK_MSG = {
-  fn: 'The Fn key is locked: if you change it you lose access to the Fn layer (connection, lighting, Win/Mac…). You can unlock it in Settings.',
-  sys: 'System keys (connection switching, Win/Mac, Reset) are locked to prevent mistakes. You can unlock them in Settings.',
+  fn: ['The Fn key is locked', 'Changing it removes the Fn layer (connection, lighting, Win/Mac). Unlock it in Settings.'],
+  sys: ['System key is locked', 'Locked to avoid changing connection, Win/Mac or Reset by mistake. Unlock it in Settings.'],
 };
 const isMO = c => c != null && S.KC && c >= S.KC.T.MO && c < S.KC.T.MO + 16;
 const layerName = l => (S.t ? S.profile : PROFILES['258A:010C'])?.layerNames?.[l] ?? (l === 0 ? 'Base' : `Layer ${l}`);
